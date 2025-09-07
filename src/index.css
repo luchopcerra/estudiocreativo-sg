@@ -8,6 +8,11 @@
   --sage: #97A08E;
   --sage-dark: #86907E;
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
 @font-face {
   font-family: "Now";
   src: url("./assets/fonts/Now-Regular.otf") format("opentype");
