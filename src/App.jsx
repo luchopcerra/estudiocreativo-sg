@@ -11,6 +11,7 @@ import {
 import highlight from "./assets/meta/destacada.webp";
 import projects from "./data/projects.json";
 import testimonials from "./data/testimonials.json";
+import services from "./data/services.json";
 
 const PALETTE = {
   sage: "#959c89", // verde salvia (banda)
@@ -375,20 +376,7 @@ function Projects() {
         id="servicios"
         className="mt-16 md:mt-24 grid sm:grid-cols-2 lg:grid-cols-3 gap-6 scroll-mt-24 md:scroll-mt-28"
       >
-        {[
-          [
-            "Diseño integral",
-            "Desde concepto, materiales y layout, hasta documentación.",
-          ],
-          [
-            "Render hiperrealista",
-            "Visualizaciones fieles para decidir con confianza.",
-          ],
-          [
-            "Dirección de obra",
-            "Coordinación con gremios y control de calidad.",
-          ],
-        ].map(([title, desc]) => (
+        {services.map(([title, desc]) => (
           <div
             key={String(title)}
             className="rounded-3xl p-6 border"
