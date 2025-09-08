@@ -1,6 +1,16 @@
 import React from "react";
-import { Mail, Instagram, MapPin, ArrowRight, Menu, X } from "lucide-react";
+import {
+  Mail,
+  Instagram,
+  MapPin,
+  ArrowRight,
+  Menu,
+  X,
+  Phone,
+} from "lucide-react";
 import highlight from "./assets/meta/destacada.webp";
+import projects from "./data/projects.json";
+import testimonials from "./data/testimonials.json";
 
 const PALETTE = {
   sage: "#959c89", // verde salvia (banda)
@@ -13,69 +23,29 @@ const PALETTE = {
 // Contacto: número de WhatsApp centralizado (solo dígitos con prefijo país)
 const WHATSAPP_NUMBER = "5492914441533";
 
-// Carga dinámica de imágenes por slug/variante usando Vite
-const imageUrls = import.meta.glob(
-  "./assets/proyectos/*/*.{webp,png,jpg,jpeg}",
-  { eager: true, import: "default", query: "?url" }
+// Imágenes responsivas por slug/variante usando vite-imagetools
+
+const pictureMods = import.meta.glob(
+  "./assets/proyectos/*/*.{jpg,jpeg,png,webp,avif}",
+  {
+    eager: true,
+    query: "?as=picture&w=480;768;1200;1600&format=avif;webp;jpg&quality=75",
+  }
 );
-const IMAGES = Object.entries(imageUrls).reduce((acc, [path, url]) => {
-  const parts = path.split("/"); // [".", "assets", "proyectos", slug, filename]
+const PICTURES = Object.entries(pictureMods).reduce((acc, [path, mod]) => {
+  const parts = path.split("/"); // [".", "assets", "proyectos", slug, filename?query]
   const slug = parts[3];
-  const filename = parts[4];
-  const variant = filename.split(".")[0];
-  acc[slug] = acc[slug] || {};
-  acc[slug][variant] = url;
+  const fileWithQuery = parts[4];
+  const baseFile = fileWithQuery.split("?")[0];
+  const variant = baseFile.split(".")[0];
+  const pic = mod?.default || mod;
+  if (pic && pic.sources && pic.img) {
+    acc[slug] = acc[slug] || {};
+    acc[slug][variant] = pic;
+  }
   return acc;
 }, {});
-const getImg = (slug, variant) => IMAGES?.[slug]?.[variant] || null;
-
-const projects = [
-  {
-    title: "Cocina Blanco Norte",
-    slug: "cocina-blanco-norte",
-    tag: "Residencial",
-    description:
-      "La familia buscaba una cocina luminosa, con más espacio de guardado y un diseño limpio. Trabajamos en un layout funcional en L, materiales claros, iluminación puntual y generales cálidas, y optimizamos la mesada para preparación diaria.",
-  },
-  {
-    title: "Baño Terrazo Gris",
-    slug: "bano-terrazo-gris",
-    tag: "Residencial",
-    description:
-      "El proyecto de la casa lo hizo otro estudio, pero en el diseño de interiores de este baño me metí de lleno con un solo objetivo: comprobar que los revestimientos que elegí funcionarían.\
-​No se trataba solamente  de un render. Mi gran obsesión era ver cómo los colores y las texturas de esos materiales se veían en el espacio. Y este es el resultado de ese 'experimento'",
-  },
-  {
-    title: "Cocina Comedor replanteo",
-    slug: "replanteo-cocina-comedor",
-    tag: "Residencial",
-    card: "",
-    description:
-      "Remodelación integral de cocina. Transformación de un antiguo baño, lavadero y espacio residual en una cocina moderna, funcional y luminosa. Se optimizó la distribución, se diseñaron muebles a medida y se eligieron los materiales y acabados para crear el corazón del hogar.",
-  },
-  {
-    title: "Baño Pequeño, Gran Estilo: Optimización y Diseño",
-    slug: "bano-optimizado",
-    tag: "Residencial",
-    description:
-      "Diseño de interiores para baño. Transformación de un espacio en obra gris en un ambiente funcional y estético. Nos enfocamos en la optimización de metros cuadrados y la elección estratégica de revestimientos, mobiliario y distribución para lograr un diseño moderno y práctico.",
-  },
-];
-
-const testimonials = [
-  {
-    name: "María & Tomás",
-    text: "Gran acompañamiento en decisiones y un resultado super luminoso y funcional. Recomendados.",
-  },
-  {
-    name: "Valentina R.",
-    text: "Interpretaron perfecto mi estilo. La obra quedó tal cual las visualizaciones que mostraron.",
-  },
-  {
-    name: "Estudio D.",
-    text: "Profesionales y prolijos. Excelente manejo de materiales y tiempos.",
-  },
-];
+const getPicture = (slug, variant) => PICTURES?.[slug]?.[variant] || null;
 
 export default function App() {
   const [route, setRoute] = React.useState(window.location.hash || "");
@@ -95,10 +65,11 @@ export default function App() {
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen overflow-x-hidden"
       style={{ background: PALETTE.ivory, color: PALETTE.charcoal }}
     >
       <Header />
+
       <div className="relative mx-auto max-w-[1400px]">
         {project ? (
           <ProjectDetail project={project} />
@@ -120,21 +91,52 @@ export default function App() {
 function Header() {
   const [scrolled, setScrolled] = React.useState(false);
   const [open, setOpen] = React.useState(false);
+  const headerRef = React.useRef(null);
+  const [headerHeight, setHeaderHeight] = React.useState(0);
+
+  // Evita parpadeo al inicio aplicando histéresis en el umbral
+  // ON cuando supera THRESHOLD_ON; OFF cuando baja de THRESHOLD_OFF
+  const scrolledRef = React.useRef(false);
+  const THRESHOLD_ON = 24; // px
+  const THRESHOLD_OFF = 8; // px
 
   React.useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
+    const updateScrolled = () => {
+      const y = window.scrollY || window.pageYOffset || 0;
+      const next = scrolledRef.current ? y > THRESHOLD_OFF : y > THRESHOLD_ON;
+      if (next !== scrolledRef.current) {
+        scrolledRef.current = next;
+        setScrolled(next);
+      }
+    };
     const onResize = () => {
       if (window.innerWidth >= 768) setOpen(false);
     };
     const onHash = () => setOpen(false);
-    onScroll();
-    window.addEventListener("scroll", onScroll);
+    // Estado inicial
+    updateScrolled();
+    window.addEventListener("scroll", updateScrolled, { passive: true });
     window.addEventListener("resize", onResize);
     window.addEventListener("hashchange", onHash);
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("scroll", updateScrolled);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("hashchange", onHash);
+    };
+  }, []);
+
+  // Medir alto del header para compensar cuando pasa a fixed
+  React.useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const measure = () => setHeaderHeight(el.getBoundingClientRect().height);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
     };
   }, []);
 
@@ -146,18 +148,23 @@ function Header() {
     ? "text-[16px] md:text-[18px]"
     : "text-[18px] md:text-[20px]";
 
+  const positionClass = scrolled ? "fixed top-0 left-0 right-0" : "sticky top-0";
+
   return (
-    <header
-      className={`w-full sticky top-0 z-50 transition-all ${
-        scrolled ? "shadow-sm border-b backdrop-blur-md" : ""
-      }`}
-      style={{
-        background: scrolled ? "rgba(246,243,238,0.85)" : PALETTE.ivory,
-        borderColor: "#00000012",
-      }}
-    >
+    <>
+      <header
+        ref={headerRef}
+        className={`w-full ${positionClass} z-50 transition-all ${
+          scrolled ? "shadow-sm border-b backdrop-blur-md" : ""
+        }`}
+        style={{
+          background: scrolled ? "rgba(246,243,238,0.85)" : PALETTE.ivory,
+          borderColor: "#00000012",
+        }}
+      >
+      {/* Header móvil: logo + botón hamburguesa */}
       <div
-        className={`relative mx-auto max-w-[1400px] flex items-center justify-between px-5 md:px-10 ${topBarPadding}`}
+        className={`relative mx-auto max-w-[1400px] flex items-center justify-between px-5 md:px-10 ${topBarPadding} md:hidden`}
       >
         <a
           href="#top"
@@ -181,32 +188,6 @@ function Header() {
           </span>
         </a>
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-2 text-sm">
-          {[
-            ["Servicios", "#servicios"],
-            ["Opiniones", "#opiniones"],
-            ["Sobre mí", "#sobre"],
-            ["Contacto", "#contacto"],
-          ].map(([label, href]) => (
-            <a key={label} href={href} className="transition-colors btn-sage">
-              {label}
-            </a>
-          ))}
-          <a
-            href="#trabajos"
-            className="transition-colors btn-sage rounded-full border px-3 py-1 inline-flex items-center gap-2 hover:bg-[var(--charcoal)] hover:text-white"
-            style={{
-              borderColor: PALETTE.charcoal,
-              borderWidth: "1px",
-              borderStyle: "solid",
-            }}
-          >
-            Ver trabajos <ArrowRight size={16} />
-          </a>
-        </nav>
-
-        {/* Mobile hamburger */}
         <button
           type="button"
           className="md:hidden inline-flex items-center justify-center rounded-xl border px-3 py-2"
@@ -217,7 +198,6 @@ function Header() {
           {open ? <X size={18} /> : <Menu size={18} />}
         </button>
 
-        {/* Mobile dropdown */}
         {open && (
           <div
             className="absolute left-0 right-0 top-full md:hidden px-5 pb-4 border-t shadow-sm"
@@ -255,16 +235,74 @@ function Header() {
           </div>
         )}
       </div>
-    </header>
+      {/* Top bar — sólo desktop */}
+      <div
+        className={`relative mx-auto max-w-[1400px] hidden md:flex items-center justify-between px-5 md:px-10 ${topBarPadding}`}
+      >
+        <a
+          href="#top"
+          className="group inline-flex items-end gap-3"
+          aria-label="SG Estudio Creativo"
+        >
+          <span
+            className={`font-black tracking-tight brand-sg-md leading-none transition-all ${logoSize}`}
+          >
+            SG
+          </span>
+          <span className="leading-none">
+            <span
+              className={`block tracking-[0.12em] lowercase transition-all ${subTitleSize}`}
+            >
+              estudio creativo
+            </span>
+            <span className="block text-xs md:text-sm opacity-80 mt-1 transition-all">
+              diseño de interiores y arquitectura
+            </span>
+          </span>
+        </a>
+
+        {/* Nav */}
+        <nav className="flex items-center gap-2 text-sm">
+          {[
+            ["Servicios", "#servicios"],
+            ["Opiniones", "#opiniones"],
+            ["Sobre mí", "#sobre"],
+            ["Contacto", "#contacto"],
+          ].map(([label, href]) => (
+            <a key={label} href={href} className="transition-colors btn-sage">
+              {label}
+            </a>
+          ))}
+          <a
+            href="#trabajos"
+            className="transition-colors btn-sage rounded-full border px-3 py-1 inline-flex items-center gap-2 hover:bg-[var(--charcoal)] hover:text-white"
+            style={{
+              borderColor: PALETTE.charcoal,
+              borderWidth: "1px",
+              borderStyle: "solid",
+            }}
+          >
+            Ver trabajos <ArrowRight size={16} />
+          </a>
+        </nav>
+      </div>
+      </header>
+      {/* Spacer para evitar salto cuando el header está fixed */}
+      <div aria-hidden="true" style={{ height: scrolled ? headerHeight : 0 }} />
+    </>
   );
 }
 
 function Hero() {
   return (
-    <section className="relative px-5 md:px-10 mt-14 md:mt-24" id="top">
+    <section
+      className="relative px-5 md:px-10 md:mt-24 overflow-hidden"
+      id="top"
+    >
       <div className="grid md:grid-cols-2 gap-10 items-center">
         <div>
-          <div className="flex items-end gap-6">
+          {/* Bloque de marca grande: oculto en mobile por redundancia con el header */}
+          <div className="hidden md:flex items-end gap-6">
             <span className="brand-sg text-[120px] md:text-[160px] leading-none">
               SG
             </span>
@@ -297,6 +335,10 @@ function Hero() {
             src={highlight}
             alt="Render destacado: Cocina Blanco Norte"
             className="w-full h-full object-cover"
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+            sizes="(min-width: 768px) 50vw, 100vw"
           />
         </div>
       </div>
@@ -323,13 +365,7 @@ function Projects() {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8 mt-8">
         {projects.map((p, i) => (
-          <ProjectCard
-            key={i}
-            title={p.title}
-            tag={p.tag}
-            img={getImg(p.slug, "portada")}
-            slug={p.slug}
-          />
+          <ProjectCard key={i} title={p.title} tag={p.tag} slug={p.slug} />
         ))}
       </div>
 
@@ -366,19 +402,50 @@ function Projects() {
 }
 
 function ProjectCard({ title, tag, img, slug }) {
+  const pic = getPicture(slug, "portada");
+  const [loaded, setLoaded] = React.useState(false);
   return (
     <article
       className="group rounded-3xl overflow-hidden border shadow-sm"
       style={{ borderColor: "#00000012" }}
     >
       <div className="relative aspect-[4/3]">
-        {img ? (
-          <img
-            src={img}
-            alt={title}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
+        {pic ? (
+          <>
+            <picture>
+              {(pic.sources
+                ? Array.isArray(pic.sources)
+                  ? pic.sources
+                  : [pic.sources]
+                : []
+              ).map((s, idx) => (
+                <source
+                  key={s?.srcset || s?.src || idx}
+                  srcSet={s?.srcset || s?.src}
+                  type={s?.type}
+                  sizes="(min-width:1280px) 33vw, (min-width:640px) 50vw, 100vw"
+                />
+              ))}
+              <img
+                src={pic.img.src}
+                alt={title}
+                className={`w-full h-full object-cover transition-[filter,opacity] duration-500 ${
+                  loaded ? "opacity-100" : "opacity-80 blur-[2px]"
+                }`}
+                loading="lazy"
+                decoding="async"
+                sizes="(min-width:1280px) 33vw, (min-width:640px) 50vw, 100vw"
+                onLoad={() => setLoaded(true)}
+                onError={() => setLoaded(true)}
+              />
+            </picture>
+            {!loaded && (
+              <div
+                className="absolute inset-0 animate-pulse"
+                style={{ background: "#E6E2DA" }}
+              />
+            )}
+          </>
         ) : (
           <PlaceholderImage label={title} />
         )}
@@ -408,9 +475,11 @@ function ProjectCard({ title, tag, img, slug }) {
 }
 
 function ProjectDetail({ project }) {
-  const beforeSrc = getImg(project.slug, "antes");
-  const afterSrc =
-    getImg(project.slug, "despues") || getImg(project.slug, "portada");
+  const beforePic = getPicture(project.slug, "antes");
+  const afterPic =
+    getPicture(project.slug, "despues") || getPicture(project.slug, "portada");
+  const [beforeLoaded, setBeforeLoaded] = React.useState(false);
+  const [afterLoaded, setAfterLoaded] = React.useState(false);
   return (
     <section className="px-5 md:px-10 mt-14 md:mt-20 mb-16">
       <a href="#trabajos" className="text-sm underline opacity-80">
@@ -428,13 +497,42 @@ function ProjectDetail({ project }) {
           className="rounded-3xl overflow-hidden border shadow-sm bg-white"
           style={{ borderColor: "#00000012" }}
         >
-          {beforeSrc ? (
-            <img
-              src={beforeSrc}
-              alt={`${project.title} - Antes`}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
+          {beforePic ? (
+            <>
+              <picture>
+                {(beforePic.sources
+                  ? Array.isArray(beforePic.sources)
+                    ? beforePic.sources
+                    : [beforePic.sources]
+                  : []
+                ).map((s, idx) => (
+                  <source
+                    key={s?.srcset || s?.src || idx}
+                    srcSet={s?.srcset || s?.src}
+                    type={s?.type}
+                    sizes="(min-width:768px) 50vw, 100vw"
+                  />
+                ))}
+                <img
+                  src={beforePic.img.src}
+                  alt={`${project.title} - Antes`}
+                  className={`w-full h-full object-cover transition-[filter,opacity] duration-500 ${
+                    beforeLoaded ? "opacity-100" : "opacity-80 blur-[2px]"
+                  }`}
+                  loading="lazy"
+                  decoding="async"
+                  sizes="(min-width:768px) 50vw, 100vw"
+                  onLoad={() => setBeforeLoaded(true)}
+                  onError={() => setBeforeLoaded(true)}
+                />
+              </picture>
+              {!beforeLoaded && (
+                <div
+                  className="absolute inset-0 animate-pulse"
+                  style={{ background: "#EDE9E3" }}
+                />
+              )}
+            </>
           ) : (
             <PlaceholderImage label="Antes" />
           )}
@@ -446,11 +544,45 @@ function ProjectDetail({ project }) {
           className="rounded-3xl overflow-hidden border shadow-sm bg-white"
           style={{ borderColor: "#00000012" }}
         >
-          <img
-            src={afterSrc}
-            alt={`${project.title} - Después`}
-            className="w-full h-full object-cover"
-          />
+          {afterPic ? (
+            <>
+              <picture>
+                {(afterPic.sources
+                  ? Array.isArray(afterPic.sources)
+                    ? afterPic.sources
+                    : [afterPic.sources]
+                  : []
+                ).map((s, idx) => (
+                  <source
+                    key={s?.srcset || s?.src || idx}
+                    srcSet={s?.srcset || s?.src}
+                    type={s?.type}
+                    sizes="(min-width:768px) 50vw, 100vw"
+                  />
+                ))}
+                <img
+                  src={afterPic.img.src}
+                  alt={`${project.title} - Después`}
+                  className={`w-full h-full object-cover transition-[filter,opacity] duration-500 ${
+                    afterLoaded ? "opacity-100" : "opacity-80 blur-[2px]"
+                  }`}
+                  loading="lazy"
+                  decoding="async"
+                  sizes="(min-width:768px) 50vw, 100vw"
+                  onLoad={() => setAfterLoaded(true)}
+                  onError={() => setAfterLoaded(true)}
+                />
+              </picture>
+              {!afterLoaded && (
+                <div
+                  className="absolute inset-0 animate-pulse"
+                  style={{ background: "#EDE9E3" }}
+                />
+              )}
+            </>
+          ) : (
+            <PlaceholderImage label="Después" />
+          )}
           <figcaption className="px-4 py-2 text-xs opacity-70">
             El después
           </figcaption>
@@ -575,7 +707,7 @@ function Contact() {
                 href={`https://wa.me/${WHATSAPP_NUMBER}`}
                 className="flex items-center gap-3 hover:opacity-70"
               >
-                <WhatsAppIcon size={18} /> +54 9 2914 44-1533
+                <Phone size={18} /> +54 9 2914 44-1533
               </a>
               <div className="flex items-center gap-3 opacity-80">
                 <MapPin size={18} /> Villa General Belgrano, Córdoba · Atención
@@ -631,45 +763,49 @@ function Contact() {
   );
 }
 
-function WhatsAppIcon({ size = 18 }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M21 11.5A8.5 8.5 0 0012 3a8.5 8.5 0 00-8.5 8.5c0 1.8.5 3.6 1.5 5.1L5 21l4.6-1.2A8.4 8.4 0 0012 20.5c4.7 0 8.5-3.8 8.5-8.5z" />
-      <path d="M15.1 14.1c-.3.6-1.1 1-1.6 1.1-.4.1-.8.1-1.8-.2-1.6-.4-3-1.7-3.3-2-.3-.3-1-1.1-1-2 0-.9.5-1.4.7-1.6.2-.2.4-.3.6-.3.2 0 .4 0 .6.01.2.01.4-.05.6.3.2.36.7 1.2.8 1.3.1.1.2.2.1.35-.1.15-.1.2-.2.33-.1.12-.2.26-.3.35-.1.1-.2.2-.08.4.12.2.5.75 1 1.2.7.6 1.3.8 1.6.9.3.1.5.08.7-.05.2-.12.6-.64.8-.85.2-.22.4-.18.7-.1.28.08 1.1.5 1.3.6.2.1.3.16.36.26.06.1.06.55-.1 1.1z" />
-    </svg>
-  );
-}
-
 function Footer() {
   return (
-    <footer className="w-full bg-[var(--charcoal)] text-white">
-      <div className="px-5 md:px-10 py-16 md:py-20 relative mx-auto max-w-[1400px]">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+    <footer className="w-full bg-[var(--charcoal)] text-white border-t" style={{ borderColor: "#FFFFFF22" }}>
+      <div className="px-5 md:px-10 py-14 md:py-18 relative mx-auto max-w-[1400px]">
+        {/* Top row: brand + quick links */}
+        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-8">
           <div className="flex items-end gap-3">
-            <span className="font-black brand-sg-sm text-[26px] md:text-[28px] leading-none">
-              SG
-            </span>
+            <span className="font-black brand-sg-sm text-[26px] md:text-[28px] leading-none">SG</span>
             <div className="leading-none">
-              <div className="text-sm tracking-[0.14em] lowercase">
-                estudio creativo
-              </div>
-              <div className="text-xs opacity-80">
-                diseño de interiores y arquitectura
-              </div>
+              <div className="text-sm tracking-[0.14em] lowercase">estudio creativo</div>
+              <div className="text-xs opacity-80">diseño de interiores y arquitectura</div>
             </div>
           </div>
+
+          {/* Nav links removidos por redundancia con header sticky */}
+        </div>
+
+        {/* Divider */}
+        <div className="my-6" style={{ height: 1, background: "#FFFFFF1A" }} />
+
+        {/* Bottom row: owner + socials + legal */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="text-xs md:text-sm opacity-90">
+            Dirigido por <span className="font-medium">Sol Gauna</span>
+          </div>
+
           <div className="flex items-center gap-4">
+            <a
+              href={`https://wa.me/${WHATSAPP_NUMBER}`}
+              className="flex items-center gap-2 opacity-90 hover:opacity-100 transition-opacity text-xs md:text-sm"
+              aria-label="WhatsApp"
+              title="WhatsApp"
+            >
+              <Phone size={16} /> +54 9 2914 44-1533
+            </a>
+            <a
+              href="mailto:solg.estudiocreativo@gmail.com"
+              className="flex items-center gap-2 opacity-90 hover:opacity-100 transition-opacity text-xs md:text-sm"
+              aria-label="Email"
+              title="Email"
+            >
+              <Mail size={16} /> solg.estudiocreativo@gmail.com
+            </a>
             <a
               href="https://www.instagram.com/solg.estudiocreativo/"
               target="_blank"
@@ -680,11 +816,10 @@ function Footer() {
             >
               <Instagram size={18} />
             </a>
-            <div className="text-xs opacity-80">
-              © {new Date().getFullYear()}{" "}
-              <span className="brand-sg-xs">SG</span> estudio creativo — Todos
-              los derechos reservados
-            </div>
+          </div>
+
+          <div className="text-[11px] md:text-xs opacity-70">
+            © {new Date().getFullYear()} <span className="brand-sg-xs">SG</span> estudio creativo — Todos los derechos reservados
           </div>
         </div>
       </div>

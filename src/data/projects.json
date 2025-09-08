@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Cocina Blanco Norte",
+    "slug": "cocina-blanco-norte",
+    "tag": "Residencial",
+    "description": "La familia buscaba una cocina luminosa, con más espacio de guardado y un diseño limpio. Trabajamos en un layout funcional en L, materiales claros, iluminación puntual y generales cálidas, y optimizamos la mesada para preparación diaria."
+  },
+  {
+    "title": "Baño Terrazo Gris",
+    "slug": "bano-terrazo-gris",
+    "tag": "Residencial",
+    "description": "El proyecto de la casa lo hizo otro estudio, pero en el diseño de interiores de este baño me metí de lleno con un solo objetivo: comprobar que los revestimientos que elegí funcionarían. No se trataba solamente  de un render. Mi gran obsesión era ver cómo los colores y las texturas de esos materiales se veían en el espacio. Y este es el resultado de ese 'experimento'"
+  },
+  {
+    "title": "Cocina Comedor replanteo",
+    "slug": "replanteo-cocina-comedor",
+    "tag": "Residencial",
+    "description": "Remodelación integral de cocina. Transformación de un antiguo baño, lavadero y espacio residual en una cocina moderna, funcional y luminosa. Se optimizó la distribución, se diseñaron muebles a medida y se eligieron los materiales y acabados para crear el corazón del hogar."
+  },
+  {
+    "title": "Baño Pequeño, Gran Estilo: Optimización y Diseño",
+    "slug": "bano-optimizado",
+    "tag": "Residencial",
+    "description": "Diseño de interiores para baño. Transformación de un espacio en obra gris en un ambiente funcional y estético. Nos enfocamos en la optimización de metros cuadrados y la elección estratégica de revestimientos, mobiliario y distribución para lograr un diseño moderno y práctico."
+  }
+]

@@ -2,55 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color: #101010;
-  --charcoal: #101010;
-  --sage: #97A08E;
-  --sage-dark: #86907E;
-}
+@layer base {
+  :root {
+    color: #101010;
+    --charcoal: #101010;
+    --sage: #97a08e;
+    --sage-dark: #86907e;
+  }
 
-html {
-  scroll-behavior: smooth;
-}
+  html {
+    scroll-behavior: smooth;
+    overflow-x: hidden; /* Fallback extra por si algún hijo expande el viewport */
+  }
 
-@font-face {
-  font-family: "Now";
-  src: url("./assets/fonts/Now-Regular.otf") format("opentype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
+  @font-face {
+    font-family: "Now";
+    src: url("./assets/fonts/Now-Regular.otf") format("opentype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
 
-body {
-  font-family: "Now", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
-    Inter, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  body {
+    font-family:
+      "Now",
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      Segoe UI,
+      Roboto,
+      Inter,
+      Helvetica,
+      Arial,
+      "Apple Color Emoji",
+      "Segoe UI Emoji";
+    overflow-x: hidden; /* Previene scroll horizontal en mobile */
+  }
 }
 
 /* Marca SG: tracking super negativo */
-.brand-sg {
-  letter-spacing: -25px;
-}
-.brand-sg-md {
-  letter-spacing: -8px;
-}
-.brand-sg-sm {
-  letter-spacing: -5px;
-}
-.brand-sg-xs {
-  letter-spacing: -2px;
+@layer utilities {
+  .brand-sg {
+    letter-spacing: -25px;
+  }
+  .brand-sg-md {
+    letter-spacing: -8px;
+  }
+  .brand-sg-sm {
+    letter-spacing: -5px;
+  }
+  .brand-sg-xs {
+    letter-spacing: -2px;
+  }
 }
 
 /* Botón con hover salvia para CTAs puntuales */
-.btn-sage {
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.75rem;
-  transition: background-color 200ms ease, color 200ms ease;
-}
-.btn-sage:hover {
-  background: var(--sage);
-  color: #fff;
+@layer components {
+  .btn-sage {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.75rem;
+    transition:
+      background-color 200ms ease,
+      color 200ms ease;
+  }
+  .btn-sage:hover {
+    background: var(--sage);
+    color: #fff;
+  }
 }
