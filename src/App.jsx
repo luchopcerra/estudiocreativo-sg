@@ -148,7 +148,9 @@ function Header() {
     ? "text-[16px] md:text-[18px]"
     : "text-[18px] md:text-[20px]";
 
-  const positionClass = scrolled ? "fixed top-0 left-0 right-0" : "sticky top-0";
+  const positionClass = scrolled
+    ? "fixed top-0 left-0 right-0"
+    : "sticky top-0";
 
   return (
     <>
@@ -162,130 +164,130 @@ function Header() {
           borderColor: "#00000012",
         }}
       >
-      {/* Header móvil: logo + botón hamburguesa */}
-      <div
-        className={`relative mx-auto max-w-[1400px] flex items-center justify-between px-5 md:px-10 ${topBarPadding} md:hidden`}
-      >
-        <a
-          href="#top"
-          className="group inline-flex items-end gap-3"
-          aria-label="SG Estudio Creativo"
+        {/* Header móvil: logo + botón hamburguesa */}
+        <div
+          className={`relative mx-auto max-w-[1400px] flex items-center justify-between px-5 md:px-10 ${topBarPadding} md:hidden`}
         >
-          <span
-            className={`font-black tracking-tight brand-sg-md leading-none transition-all ${logoSize}`}
+          <a
+            href="#top"
+            className="group inline-flex items-end gap-3"
+            aria-label="SG Estudio Creativo"
           >
-            SG
-          </span>
-          <span className="leading-none">
             <span
-              className={`block tracking-[0.12em] lowercase transition-all ${subTitleSize}`}
+              className={`font-black tracking-tight brand-sg-md leading-none transition-all ${logoSize}`}
             >
-              estudio creativo
+              SG
             </span>
-            <span className="block text-xs md:text-sm opacity-80 mt-1 transition-all">
-              diseño de interiores y arquitectura
+            <span className="leading-none">
+              <span
+                className={`block tracking-[0.12em] lowercase transition-all ${subTitleSize}`}
+              >
+                estudio creativo
+              </span>
+              <span className="block text-xs md:text-sm opacity-80 mt-1 transition-all">
+                diseño de interiores y arquitectura
+              </span>
             </span>
-          </span>
-        </a>
+          </a>
 
-        <button
-          type="button"
-          className="md:hidden inline-flex items-center justify-center rounded-xl border px-3 py-2"
-          aria-label={open ? "Cerrar menú" : "Abrir menú"}
-          onClick={() => setOpen((v) => !v)}
-          style={{ borderColor: PALETTE.graphite }}
-        >
-          {open ? <X size={18} /> : <Menu size={18} />}
-        </button>
-
-        {open && (
-          <div
-            className="absolute left-0 right-0 top-full md:hidden px-5 pb-4 border-t shadow-sm"
-            style={{ background: PALETTE.ivory, borderColor: "#00000012" }}
+          <button
+            type="button"
+            className="md:hidden inline-flex items-center justify-center rounded-xl border px-3 py-2"
+            aria-label={open ? "Cerrar menú" : "Abrir menú"}
+            onClick={() => setOpen((v) => !v)}
+            style={{ borderColor: PALETTE.graphite }}
           >
-            <nav className="mt-2 grid gap-2 text-sm">
-              {[
-                ["Servicios", "#servicios"],
-                ["Opiniones", "#opiniones"],
-                ["Sobre mí", "#sobre"],
-                ["Contacto", "#contacto"],
-              ].map(([label, href]) => (
+            {open ? <X size={18} /> : <Menu size={18} />}
+          </button>
+
+          {open && (
+            <div
+              className="absolute left-0 right-0 top-full md:hidden px-5 pb-4 border-t shadow-sm"
+              style={{ background: PALETTE.ivory, borderColor: "#00000012" }}
+            >
+              <nav className="mt-2 grid gap-2 text-sm">
+                {[
+                  ["Servicios", "#servicios"],
+                  ["Opiniones", "#opiniones"],
+                  ["Sobre mí", "#sobre"],
+                  ["Contacto", "#contacto"],
+                ].map(([label, href]) => (
+                  <a
+                    key={label}
+                    href={href}
+                    className="transition-colors btn-sage w-full justify-between"
+                    onClick={() => setOpen(false)}
+                  >
+                    {label} <ArrowRight size={16} />
+                  </a>
+                ))}
                 <a
-                  key={label}
-                  href={href}
-                  className="transition-colors btn-sage w-full justify-between"
+                  href="#trabajos"
+                  className="transition-colors btn-sage rounded-xl border px-3 py-2 inline-flex items-center gap-2 justify-center hover:bg-[var(--charcoal)] hover:text-white"
+                  style={{
+                    borderColor: PALETTE.charcoal,
+                    borderWidth: "1px",
+                    borderStyle: "solid",
+                  }}
                   onClick={() => setOpen(false)}
                 >
-                  {label} <ArrowRight size={16} />
+                  Ver trabajos <ArrowRight size={16} />
                 </a>
-              ))}
-              <a
-                href="#trabajos"
-                className="transition-colors btn-sage rounded-xl border px-3 py-2 inline-flex items-center gap-2 justify-center hover:bg-[var(--charcoal)] hover:text-white"
-                style={{
-                  borderColor: PALETTE.charcoal,
-                  borderWidth: "1px",
-                  borderStyle: "solid",
-                }}
-                onClick={() => setOpen(false)}
-              >
-                Ver trabajos <ArrowRight size={16} />
-              </a>
-            </nav>
-          </div>
-        )}
-      </div>
-      {/* Top bar — sólo desktop */}
-      <div
-        className={`relative mx-auto max-w-[1400px] hidden md:flex items-center justify-between px-5 md:px-10 ${topBarPadding}`}
-      >
-        <a
-          href="#top"
-          className="group inline-flex items-end gap-3"
-          aria-label="SG Estudio Creativo"
+              </nav>
+            </div>
+          )}
+        </div>
+        {/* Top bar — sólo desktop */}
+        <div
+          className={`relative mx-auto max-w-[1400px] hidden md:flex items-center justify-between px-5 md:px-10 ${topBarPadding}`}
         >
-          <span
-            className={`font-black tracking-tight brand-sg-md leading-none transition-all ${logoSize}`}
-          >
-            SG
-          </span>
-          <span className="leading-none">
-            <span
-              className={`block tracking-[0.12em] lowercase transition-all ${subTitleSize}`}
-            >
-              estudio creativo
-            </span>
-            <span className="block text-xs md:text-sm opacity-80 mt-1 transition-all">
-              diseño de interiores y arquitectura
-            </span>
-          </span>
-        </a>
-
-        {/* Nav */}
-        <nav className="flex items-center gap-2 text-sm">
-          {[
-            ["Servicios", "#servicios"],
-            ["Opiniones", "#opiniones"],
-            ["Sobre mí", "#sobre"],
-            ["Contacto", "#contacto"],
-          ].map(([label, href]) => (
-            <a key={label} href={href} className="transition-colors btn-sage">
-              {label}
-            </a>
-          ))}
           <a
-            href="#trabajos"
-            className="transition-colors btn-sage rounded-full border px-3 py-1 inline-flex items-center gap-2 hover:bg-[var(--charcoal)] hover:text-white"
-            style={{
-              borderColor: PALETTE.charcoal,
-              borderWidth: "1px",
-              borderStyle: "solid",
-            }}
+            href="#top"
+            className="group inline-flex items-end gap-3"
+            aria-label="SG Estudio Creativo"
           >
-            Ver trabajos <ArrowRight size={16} />
+            <span
+              className={`font-black tracking-tight brand-sg-md leading-none transition-all ${logoSize}`}
+            >
+              SG
+            </span>
+            <span className="leading-none">
+              <span
+                className={`block tracking-[0.12em] lowercase transition-all ${subTitleSize}`}
+              >
+                estudio creativo
+              </span>
+              <span className="block text-xs md:text-sm opacity-80 mt-1 transition-all">
+                diseño de interiores y arquitectura
+              </span>
+            </span>
           </a>
-        </nav>
-      </div>
+
+          {/* Nav */}
+          <nav className="flex items-center gap-2 text-sm">
+            {[
+              ["Servicios", "#servicios"],
+              ["Opiniones", "#opiniones"],
+              ["Sobre mí", "#sobre"],
+              ["Contacto", "#contacto"],
+            ].map(([label, href]) => (
+              <a key={label} href={href} className="transition-colors btn-sage">
+                {label}
+              </a>
+            ))}
+            <a
+              href="#trabajos"
+              className="transition-colors btn-sage rounded-full border px-3 py-1 inline-flex items-center gap-2 hover:bg-[var(--charcoal)] hover:text-white"
+              style={{
+                borderColor: PALETTE.charcoal,
+                borderWidth: "1px",
+                borderStyle: "solid",
+              }}
+            >
+              Ver trabajos <ArrowRight size={16} />
+            </a>
+          </nav>
+        </div>
       </header>
       {/* Spacer para evitar salto cuando el header está fixed */}
       <div aria-hidden="true" style={{ height: scrolled ? headerHeight : 0 }} />
@@ -765,15 +767,24 @@ function Contact() {
 
 function Footer() {
   return (
-    <footer className="w-full bg-[var(--charcoal)] text-white border-t" style={{ borderColor: "#FFFFFF22" }}>
+    <footer
+      className="w-full bg-[var(--charcoal)] text-white border-t"
+      style={{ borderColor: "#FFFFFF22" }}
+    >
       <div className="px-5 md:px-10 py-14 md:py-18 relative mx-auto max-w-[1400px]">
         {/* Top row: brand + quick links */}
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-8">
           <div className="flex items-end gap-3">
-            <span className="font-black brand-sg-sm text-[26px] md:text-[28px] leading-none">SG</span>
+            <span className="font-black brand-sg-sm text-[26px] md:text-[28px] leading-none">
+              SG
+            </span>
             <div className="leading-none">
-              <div className="text-sm tracking-[0.14em] lowercase">estudio creativo</div>
-              <div className="text-xs opacity-80">diseño de interiores y arquitectura</div>
+              <div className="text-sm tracking-[0.14em] lowercase">
+                estudio creativo
+              </div>
+              <div className="text-xs opacity-80">
+                diseño de interiores y arquitectura
+              </div>
             </div>
           </div>
 
@@ -789,7 +800,7 @@ function Footer() {
             Dirigido por <span className="font-medium">Sol Gauna</span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <a
               href={`https://wa.me/${WHATSAPP_NUMBER}`}
               className="flex items-center gap-2 opacity-90 hover:opacity-100 transition-opacity text-xs md:text-sm"
@@ -798,6 +809,9 @@ function Footer() {
             >
               <Phone size={16} /> +54 9 2914 44-1533
             </a>
+          </div>
+
+          <div className="flex items-center gap-4">
             <a
               href="mailto:solg.estudiocreativo@gmail.com"
               className="flex items-center gap-2 opacity-90 hover:opacity-100 transition-opacity text-xs md:text-sm"
@@ -819,7 +833,9 @@ function Footer() {
           </div>
 
           <div className="text-[11px] md:text-xs opacity-70">
-            © {new Date().getFullYear()} <span className="brand-sg-xs">SG</span> estudio creativo — Todos los derechos reservados
+            © {new Date().getFullYear()}{" "}
+            <span className="brand-sg-xs">SG</span> estudio creativo — Todos los
+            derechos reservados
           </div>
         </div>
       </div>
