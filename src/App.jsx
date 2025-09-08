@@ -9,6 +9,7 @@ import {
   Phone,
 } from "lucide-react";
 import highlight from "./assets/meta/destacada.webp";
+import portrait from "./assets/meta/portrait.webp";
 import projects from "./data/projects.json";
 import testimonials from "./data/testimonials.json";
 import services from "./data/services.json";
@@ -609,23 +610,37 @@ function About() {
   return (
     <section
       id="sobre"
-      className="px-5 md:px-10 mt-20 md:mt-28 grid gap-10 items-center scroll-mt-24 md:scroll-mt-28"
+      className="px-5 md:px-10 mt-20 md:mt-28 grid gap-10 items-start scroll-mt-24 md:scroll-mt-28 md:[grid-template-columns:280px_1fr]"
     >
+      <div className="justify-self-center md:justify-self-start w-40 md:w-auto">
+        <figure
+          className="relative aspect-[3/4] w-40 md:w-[280px] rounded-3xl overflow-hidden border shadow-sm bg-white"
+          style={{ borderColor: "#00000012" }}
+        >
+          <img
+            src={portrait}
+            alt="Foto de Sol Gauna"
+            className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
+            sizes="(min-width:768px) 280px, 160px"
+          />
+          <figcaption className="sr-only">Sol Gauna — Estudio Creativo</figcaption>
+        </figure>
+      </div>
       <div>
         <h2 className="text-2xl md:text-3xl tracking-wide">Sobre mí</h2>
-        <p className="mt-4 opacity-90 leading-relaxed">
+        <p className="mt-4 opacity-90 leading-relaxed max-w-3xl">
           Soy Sol, diseñadora de interiores. Creo espacios equilibrados,
           luminosos y humanos. Trabajo con una metodología clara: relevamiento,
           anteproyecto, selección de materiales, visualizaciones hiperrealistas
           y ejecución.
         </p>
-        <ul className="mt-6 space-y-2 text-sm opacity-90">
-          <li>• Enfoque: calidez, funcionalidad, atemporalidad.</li>
+        <ul className="mt-6 space-y-2 text-sm opacity-90 list-disc pl-5">
+          <li>Enfoque: calidez, funcionalidad, atemporalidad.</li>
+          <li>Entregables: planos, renders, lista de compras y presupuesto.</li>
           <li>
-            • Entregables: planos, renders, lista de compras y presupuesto.
-          </li>
-          <li>
-            • Modalidades: online en todo el país y presencial en VGB y
+            Modalidades: online en todo el país y presencial en VGB y
             alrededores.
           </li>
         </ul>

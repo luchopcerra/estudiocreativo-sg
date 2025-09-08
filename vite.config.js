@@ -5,6 +5,6 @@ import { imagetools } from "vite-imagetools";
 export default defineConfig({
   plugins: [react(), imagetools()],
   server: {
-    allowedHosts: ["localhost", "76759e269442.ngrok-free.app"],
+    allowedHosts: ["localhost", "480724ec259c.ngrok-free.app"],
   },
 });
