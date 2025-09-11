@@ -1,0 +1,86 @@
+[
+  {
+    "slug": "functional-bathroom-tripartite-a",
+    "title": "¿Buscás un baño funcional? La idea del tripartito",
+    "tag": "Concepto de diseño",
+    "summary": "Dividimos el baño en tres áreas para ganar fluidez, privacidad y comodidad sin ampliar metros.",
+    "cover": "cover",
+    "gallery": ["vanity", "shower"],
+    "blocks": [
+      {
+        "title": "¿En qué consiste?",
+        "items": [
+          "Área lavabo: tu espacio para el arranque de la mañana, con espejo y mesada libre.",
+          "Área sanitarios: con la privacidad necesaria, apartado del resto.",
+          "Área ducha: un rincón solo para vos, para esos minutos de relax."
+        ]
+      },
+      {
+        "title": "Beneficios",
+        "text": "Varias personas pueden usar el baño casi al mismo tiempo, sin invadir el espacio del otro. Se terminan las esperas, aumenta la privacidad y la fluidez en casa mejora un montón. Además, concentrar funciones inteligentemente suele optimizar la inversión en artefactos y materiales."
+      }
+    ]
+  },
+  {
+    "slug": "functional-bathroom-tripartite-b",
+    "title": "Un baño que rinde: distribución tripartita",
+    "tag": "Tip de planificación",
+    "summary": "Tres zonas claras —lavabo, sanitarios y ducha— para que el baño funcione mejor sin obras mayores.",
+    "cover": "vanity",
+    "gallery": ["vanity", "shower"],
+    "blocks": [
+      { "text": "Separar funciones evita cruces y esperas. Podés maquillarte mientras otra persona usa el inodoro y otra se ducha, con privacidad y orden." },
+      {
+        "title": "Zonas",
+        "items": ["Lavabo operativo", "Sanitarios privados", "Ducha como espacio de relax"]
+      },
+      { "text": "Ideal para familias y baños compartidos. Optimiza tiempos y también el presupuesto al concentrar instalaciones." }
+    ]
+  },
+  {
+    "slug": "functional-bathroom-tripartite-c",
+    "title": "Tripartito: el atajo a un baño fluido",
+    "tag": "Estrategia",
+    "summary": "No sumamos metros, sumamos organización. Tres áreas que ordenan el uso diario.",
+    "cover": "shower",
+    "blocks": [
+      {
+        "title": "Claves",
+        "items": [
+          "Lavabo libre para empezar el día sin interrupciones",
+          "Sanitario independiente y discreto",
+          "Ducha que invita a bajar un cambio"
+        ]
+      },
+      { "text": "Esta lógica reduce conflicto de horarios y mejora la sensación espacial. Un pequeño cambio de distribución, gran impacto." }
+    ]
+  },
+  {
+    "slug": "functional-bathroom-tripartite-d",
+    "title": "Baño tripartito: tres funciones, cero choques",
+    "tag": "Guía rápida",
+    "summary": "Dividimos por uso para que varias personas lo aprovechen a la vez, con confort y privacidad.",
+    "cover": "plan",
+    "gallery": ["plan", "vanity"],
+    "blocks": [
+      { "text": "Cuando cada función tiene su lugar, el baño deja de ser un embudo. El día fluye mejor." },
+      {
+        "title": "¿Cómo se reparte?",
+        "items": ["Lavabo + espejo a mano", "Sanitarios aislados", "Ducha como cápsula de relax"]
+      }
+    ]
+  },
+  {
+    "slug": "functional-bathroom-tripartite-e",
+    "title": "Versión original de Instagram",
+    "tag": "Post completo",
+    "summary": "La explicación tal cual la publiqué en IG, con todos los detalles.",
+    "cover": "vanity-portrait",
+    "gallery": ["cover", "shower"],
+    "blocks": [
+      {
+        "text": "¿Problemas en el baño a la mañana? Con el Tripartito, ¡solucionado (y con estilo)!✨️✨️\n\nEl baño suele ser el primer campo de batalla del día. ¿Cuántas veces les pasó de querer lavarse la cara y la ducha está ocupada? O necesitas el espejo y otro está en lo suyo??\n\nPero no todo está perdido. Para eso existe una solución de diseño que amo proponer: el baño tripartito*. 🛀🚽🚿 . Una forma muy inteligente de organizar el espacio.\n\n¿En qué consiste? Dividimos el ambiente en tres áreas claves:\n\n✅️Área lavabo: Tu espacio para el arranco de la mañana, con espejo y mesada libre.\n✅️Área sanitarios: Con la privacidad necesaria, apartado del resto.\n✅️Área ducha: Un rincón solo para vos, para esos minutos de relax.\n\nLa magia de esta distribución es que varias personas pueden usar el baño al mismo tiempo (o casi), sin invadir el espacio del otro. Se terminan las esperas, la privacidad aumenta y la fluidez en casa mejora un montón.🙌🏽🙌🏽\n\n💲Y como si fuera poco, no es solo comodidad. En muchos de mis proyectos, esta solución permite optimizar la inversión en artefactos, evitando gastos extra innecesarios al concentrar funciones inteligentemente. Diseño funcional que también piensa en tu bolsillo. 💲\n\n¿Lo habían pensado alguna vez? ¿Les gustaría tener un baño así en su casa??"
+      }
+    ]
+  }
+]

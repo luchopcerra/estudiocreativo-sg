@@ -11,6 +11,7 @@ import {
 import highlight from "./assets/meta/destacada.webp";
 import portrait from "./assets/meta/portrait.webp";
 import projects from "./data/projects.json";
+import posts from "./data/posts.json";
 import testimonials from "./data/testimonials.json";
 import services from "./data/services.json";
 
@@ -49,6 +50,33 @@ const PICTURES = Object.entries(pictureMods).reduce((acc, [path, mod]) => {
 }, {});
 const getPicture = (slug, variant) => PICTURES?.[slug]?.[variant] || null;
 
+// Imágenes para publicaciones (misma mecánica que proyectos)
+const postPictureMods = import.meta.glob(
+  "./assets/posts/*/*.{jpg,jpeg,png,webp,avif}",
+  {
+    eager: true,
+    query: "?as=picture&w=480;768;1200;1600&format=avif;webp;jpg&quality=75",
+  }
+);
+const POST_PICTURES = Object.entries(postPictureMods).reduce(
+  (acc, [path, mod]) => {
+    const parts = path.split("/"); // [., assets, publicaciones, slug, filename?query]
+    const slug = parts[3];
+    const fileWithQuery = parts[4];
+    const baseFile = fileWithQuery.split("?")[0];
+    const variant = baseFile.split(".")[0];
+    const pic = mod?.default || mod;
+    if (pic && pic.sources && pic.img) {
+      acc[slug] = acc[slug] || {};
+      acc[slug][variant] = pic;
+    }
+    return acc;
+  },
+  {}
+);
+const getPostPicture = (slug, variant) =>
+  POST_PICTURES?.[slug]?.[variant] || null;
+
 export default function App() {
   const [route, setRoute] = React.useState(window.location.hash || "");
 
@@ -58,11 +86,17 @@ export default function App() {
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
-  // ruta detalle: #proyecto/<slug>
+  // rutas detalle: #proyecto/<slug> y #post/<slug>
   const detailMatch = route.match(/^#proyecto\/(.+)$/);
   const detailSlug = detailMatch ? detailMatch[1] : null;
   const project = detailSlug
     ? projects.find((p) => p.slug === decodeURIComponent(detailSlug))
+    : null;
+
+  const postMatch = route.match(/^#post\/(.+)$/);
+  const postSlug = postMatch ? postMatch[1] : null;
+  const post = postSlug
+    ? posts.find((p) => p.slug === decodeURIComponent(postSlug))
     : null;
 
   return (
@@ -75,9 +109,12 @@ export default function App() {
       <div className="relative mx-auto max-w-[1400px]">
         {project ? (
           <ProjectDetail project={project} />
+        ) : post ? (
+          <PostDetail post={post} />
         ) : (
           <>
             <Hero />
+            <Posts />
             <Projects />
             <Testimonials />
             <About />
@@ -209,6 +246,7 @@ function Header() {
             >
               <nav className="mt-2 grid gap-2 text-sm">
                 {[
+                  ["Publicaciones", "#publicaciones"],
                   ["Servicios", "#servicios"],
                   ["Opiniones", "#opiniones"],
                   ["Sobre mí", "#sobre"],
@@ -268,6 +306,7 @@ function Header() {
           {/* Nav */}
           <nav className="flex items-center gap-2 text-sm">
             {[
+              ["Publicaciones", "#publicaciones"],
               ["Servicios", "#servicios"],
               ["Opiniones", "#opiniones"],
               ["Sobre mí", "#sobre"],
@@ -388,6 +427,159 @@ function Projects() {
           </div>
         ))}
       </div>
+    </section>
+  );
+}
+
+function Posts() {
+  if (!posts || posts.length === 0) return null;
+  const scrollerRef = React.useRef(null);
+  const scrollByCards = (dir) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const card = el.querySelector('[data-card="post"]');
+    const step = card ? card.getBoundingClientRect().width + 24 : 320; // 24: gap
+    el.scrollBy({ left: dir * step * 3, behavior: "smooth" });
+  };
+  return (
+    <section
+      id="publicaciones"
+      className="px-5 md:px-10 mt-20 md:mt-28 scroll-mt-24 md:scroll-mt-28"
+    >
+      <div className="flex items-end justify-between">
+        <h2 className="text-2xl md:text-3xl tracking-wide">Publicaciones</h2>
+        <div className="hidden md:flex items-center gap-2">
+          <button className="btn-sage px-3 py-1 rounded-full border" style={{borderColor: PALETTE.charcoal}} onClick={() => scrollByCards(-1)}>
+            ←
+          </button>
+          <button className="btn-sage px-3 py-1 rounded-full border" style={{borderColor: PALETTE.charcoal}} onClick={() => scrollByCards(1)}>
+            →
+          </button>
+        </div>
+      </div>
+      <div
+        ref={scrollerRef}
+        className="mt-8 flex gap-6 overflow-x-auto snap-x snap-mandatory pb-2"
+        style={{scrollbarWidth: "thin"}}
+      >
+        {posts.map((p) => (
+          <div key={p.slug} className="min-w-[85%] sm:min-w-[48%] xl:min-w-[32%] snap-start" data-card="post">
+            <PostCard post={p} />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function PostCard({ post }) {
+  const pic = getPostPicture(post.slug, post.cover || "cover");
+  const [loaded, setLoaded] = React.useState(false);
+  return (
+    <article className="group rounded-3xl overflow-hidden border shadow-sm" style={{ borderColor: "#00000012" }}>
+      <div className="relative aspect-[4/3]">
+        {pic ? (
+          <>
+            <picture>
+              {(pic.sources ? (Array.isArray(pic.sources) ? pic.sources : [pic.sources]) : []).map((s, idx) => (
+                <source key={s?.srcset || s?.src || idx} srcSet={s?.srcset || s?.src} type={s?.type} sizes="(min-width:1280px) 33vw, (min-width:640px) 50vw, 100vw" />
+              ))}
+              <img
+                src={pic.img.src}
+                alt={post.title}
+                className={`w-full h-full object-cover transition-[filter,opacity] duration-500 ${loaded ? "opacity-100" : "opacity-80 blur-[2px]"}`}
+                loading="lazy"
+                decoding="async"
+                sizes="(min-width:1280px) 33vw, (min-width:640px) 50vw, 100vw"
+                onLoad={() => setLoaded(true)}
+                onError={() => setLoaded(true)}
+              />
+            </picture>
+            {!loaded && <div className="absolute inset-0 animate-pulse" style={{ background: "#E6E2DA" }} />}
+          </>
+        ) : (
+          <PlaceholderImage label={post.title} />
+        )}
+      </div>
+      <div className="p-5 flex items-center justify-between">
+        <div>
+          <h3 className="text-base md:text-lg">{post.title}</h3>
+          {post.tag && (
+            <p className="text-xs md:text-sm opacity-70">{post.tag}</p>
+          )}
+        </div>
+        <a href={`#post/${post.slug}`} className="text-xs md:text-sm opacity-90 transition-colors btn-sage">
+          Leer
+        </a>
+      </div>
+    </article>
+  );
+}
+
+function PostDetail({ post }) {
+  const hero = getPostPicture(post.slug, post.cover || "cover");
+  const gallery = (post.gallery || []).map((name) => getPostPicture(post.slug, name)).filter(Boolean);
+  const [heroLoaded, setHeroLoaded] = React.useState(false);
+  return (
+    <section className="px-5 md:px-10 mt-14 md:mt-20 mb-16">
+      <a href="#publicaciones" className="text-sm underline opacity-80">← Volver</a>
+      <h1 className="text-2xl md:text-3xl tracking-wide mt-4">{post.title}</h1>
+      {post.summary && (
+        <p className="opacity-90 mt-3 max-w-prose text-sm md:text-base">{post.summary}</p>
+      )}
+
+      {hero && (
+        <figure className="rounded-3xl overflow-hidden border shadow-sm bg-white mt-6" style={{ borderColor: "#00000012" }}>
+          <picture>
+            {(hero.sources ? (Array.isArray(hero.sources) ? hero.sources : [hero.sources]) : []).map((s, idx) => (
+              <source key={s?.srcset || s?.src || idx} srcSet={s?.srcset || s?.src} type={s?.type} sizes="100vw" />
+            ))}
+            <img
+              src={hero.img.src}
+              alt={post.title}
+              className={`w-full h-full object-cover transition-[filter,opacity] duration-500 ${heroLoaded ? "opacity-100" : "opacity-80 blur-[2px]"}`}
+              loading="eager"
+              decoding="async"
+              sizes="100vw"
+              onLoad={() => setHeroLoaded(true)}
+              onError={() => setHeroLoaded(true)}
+            />
+          </picture>
+        </figure>
+      )}
+
+      {Array.isArray(post.blocks) && post.blocks.length > 0 && (
+        <div className="mt-8 grid gap-6 max-w-3xl">
+          {post.blocks.map((b, i) => (
+            <div key={i}>
+              {b.title && <h3 className="text-lg font-medium">{b.title}</h3>}
+              {b.text && <p className="opacity-90 mt-2 leading-relaxed">{b.text}</p>}
+              {Array.isArray(b.items) && (
+                <ul className="list-disc list-inside mt-2 opacity-90 space-y-1">
+                  {b.items.map((it, idx) => (
+                    <li key={idx}>{it}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {gallery.length > 0 && (
+        <div className="grid md:grid-cols-2 gap-6 md:gap-8 mt-8">
+          {gallery.map((pic, i) => (
+            <figure key={i} className="rounded-3xl overflow-hidden border shadow-sm bg-white" style={{ borderColor: "#00000012" }}>
+              <picture>
+                {(pic.sources ? (Array.isArray(pic.sources) ? pic.sources : [pic.sources]) : []).map((s, idx) => (
+                  <source key={s?.srcset || s?.src || idx} srcSet={s?.srcset || s?.src} type={s?.type} sizes="(min-width:768px) 50vw, 100vw" />
+                ))}
+                <img src={pic.img.src} alt={post.title} className="w-full h-full object-cover" loading="lazy" decoding="async" sizes="(min-width:768px) 50vw, 100vw" />
+              </picture>
+            </figure>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
