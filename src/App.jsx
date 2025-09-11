@@ -11,6 +11,7 @@ import {
 import highlight from "./assets/meta/destacada.webp";
 import portrait from "./assets/meta/portrait.webp";
 import projects from "./data/projects.json";
+import posts from "./data/posts.json";
 import testimonials from "./data/testimonials.json";
 import services from "./data/services.json";
 
@@ -25,6 +26,17 @@ const PALETTE = {
 // Contacto: número de WhatsApp centralizado (solo dígitos con prefijo país)
 const WHATSAPP_NUMBER = "5492914441533";
 
+// Helper de slug: normaliza a minúsculas, sin tildes/ñ
+const canonSlug = (s) => {
+  try {
+    s = decodeURIComponent(String(s));
+  } catch {}
+  return String(s)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+};
+
 // Imágenes responsivas por slug/variante usando vite-imagetools
 
 const pictureMods = import.meta.glob(
@@ -36,7 +48,7 @@ const pictureMods = import.meta.glob(
 );
 const PICTURES = Object.entries(pictureMods).reduce((acc, [path, mod]) => {
   const parts = path.split("/"); // [".", "assets", "proyectos", slug, filename?query]
-  const slug = parts[3];
+  const slug = canonSlug(parts[3]);
   const fileWithQuery = parts[4];
   const baseFile = fileWithQuery.split("?")[0];
   const variant = baseFile.split(".")[0];
@@ -47,22 +59,129 @@ const PICTURES = Object.entries(pictureMods).reduce((acc, [path, mod]) => {
   }
   return acc;
 }, {});
-const getPicture = (slug, variant) => PICTURES?.[slug]?.[variant] || null;
+const getPicture = (slug, variant) => {
+  const key = canonSlug(slug);
+  return PICTURES?.[key]?.[variant] || null;
+};
+
+// Imágenes para publicaciones (misma mecánica que proyectos)
+const postPictureMods = import.meta.glob(
+  "./assets/posts/*/*.{jpg,jpeg,png,webp,avif}",
+  {
+    eager: true,
+    query: "?as=picture&w=480;768;1200;1600&format=avif;webp;jpg&quality=75",
+  }
+);
+const POST_PICTURES = Object.entries(postPictureMods).reduce(
+  (acc, [path, mod]) => {
+    const parts = path.split("/"); // [., assets, publicaciones, slug, filename?query]
+    const slug = canonSlug(parts[3]);
+    const fileWithQuery = parts[4];
+    const baseFile = fileWithQuery.split("?")[0];
+    const variant = baseFile.split(".")[0];
+    const pic = mod?.default || mod;
+    if (pic && pic.sources && pic.img) {
+      acc[slug] = acc[slug] || {};
+      acc[slug][variant] = pic;
+    }
+    return acc;
+  },
+  {}
+);
+const getPostPicture = (slug, variant) => {
+  const key = canonSlug(slug);
+  return POST_PICTURES?.[key]?.[variant] || null;
+};
 
 export default function App() {
-  const [route, setRoute] = React.useState(window.location.hash || "");
+  // Router mínimo con History API: paths limpios y anchors para secciones
+  const [path, setPath] = React.useState(window.location.pathname);
+  const [hash, setHash] = React.useState(window.location.hash || "");
 
-  React.useEffect(() => {
-    const onHashChange = () => setRoute(window.location.hash || "");
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
+  // Helper: navegación SPA con pushState
+  const navigateTo = React.useCallback((url) => {
+    const u = new URL(url, window.location.origin);
+    window.history.pushState({}, "", u.pathname + u.hash);
+    setPath(u.pathname);
+    setHash(u.hash);
   }, []);
 
-  // ruta detalle: #proyecto/<slug>
-  const detailMatch = route.match(/^#proyecto\/(.+)$/);
-  const detailSlug = detailMatch ? detailMatch[1] : null;
+  React.useEffect(() => {
+    // Actualizar estado al navegar con back/forward
+    const onPop = () => {
+      setPath(window.location.pathname);
+      setHash(window.location.hash || "");
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  React.useEffect(() => {
+    // Compat: transformar #proyecto/<slug> o #post/<slug> a rutas limpias
+    const h = window.location.hash || "";
+    const proj = h.match(/^#proyecto\/(.+)$/);
+    const pst = h.match(/^#post\/(.+)$/);
+    if (proj) {
+      const slug = decodeURIComponent(proj[1]);
+      window.history.replaceState({}, "", `/proyecto/${slug}`);
+      setPath(`/proyecto/${slug}`);
+      setHash("");
+      return;
+    }
+    if (pst) {
+      const slug = decodeURIComponent(pst[1]);
+      window.history.replaceState({}, "", `/post/${slug}`);
+      setPath(`/post/${slug}`);
+      setHash("");
+      return;
+    }
+  }, []);
+
+  React.useEffect(() => {
+    // Mantener estado de hash para anchors de secciones y permitir volver a home desde detalle
+    const onHash = () => {
+      const newHash = window.location.hash || "";
+      const onDetail = /^\/proyecto\//.test(window.location.pathname) || /^\/post\//.test(window.location.pathname);
+      // Si estamos en detalle y el hash apunta a una sección (no detalle), ir a home manteniendo el hash
+      if (onDetail && newHash && !newHash.startsWith("#proyecto/") && !newHash.startsWith("#post/")) {
+        window.history.replaceState({}, "", `/${newHash}`);
+        setPath("/");
+        setHash(newHash);
+      } else {
+        setHash(newHash);
+      }
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  // Scroll automático a anchors cuando estamos en home
+  React.useEffect(() => {
+    if (path !== "/") return;
+    const id = (hash || "").slice(1);
+    if (!id) return;
+    // esperar al próximo frame para garantizar el render
+    requestAnimationFrame(() => {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [path, hash]);
+
+  // rutas detalle limpias: /proyecto/<slug> y /post/<slug>
+  const projMatch = path.match(/^\/proyecto\/(.+)$/);
+  const detailSlug = projMatch ? projMatch[1] : null;
   const project = detailSlug
-    ? projects.find((p) => p.slug === decodeURIComponent(detailSlug))
+    ? projects.find(
+        (p) => decodeURIComponent(p.slug) === decodeURIComponent(detailSlug),
+      )
+    : null;
+
+  const pstMatch = path.match(/^\/post\/(.+)$/);
+  const postSlug = pstMatch ? pstMatch[1] : null;
+  const post = postSlug
+    ? posts.find(
+        (p) => decodeURIComponent(p.slug) === decodeURIComponent(postSlug),
+      )
     : null;
 
   return (
@@ -70,15 +189,18 @@ export default function App() {
       className="min-h-screen overflow-x-hidden"
       style={{ background: PALETTE.ivory, color: PALETTE.charcoal }}
     >
-      <Header />
+      <Header onNavigate={navigateTo} />
 
       <div className="relative mx-auto max-w-[1400px]">
         {project ? (
           <ProjectDetail project={project} />
+        ) : post ? (
+          <PostDetail post={post} />
         ) : (
           <>
             <Hero />
-            <Projects />
+            <Posts onNavigate={navigateTo} />
+            <Projects onNavigate={navigateTo} />
             <Testimonials />
             <About />
             <Contact />
@@ -90,7 +212,7 @@ export default function App() {
   );
 }
 
-function Header() {
+function Header({ onNavigate }) {
   const [scrolled, setScrolled] = React.useState(false);
   const [open, setOpen] = React.useState(false);
   const headerRef = React.useRef(null);
@@ -171,9 +293,13 @@ function Header() {
           className={`relative mx-auto max-w-[1400px] flex items-center justify-between px-5 md:px-10 ${topBarPadding} md:hidden`}
         >
           <a
-            href="#top"
+            href="/#top"
             className="group inline-flex items-end gap-3"
             aria-label="SG Estudio Creativo"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate("/#top");
+            }}
           >
             <span
               className={`font-black tracking-tight brand-sg-md leading-none transition-all ${logoSize}`}
@@ -209,29 +335,38 @@ function Header() {
             >
               <nav className="mt-2 grid gap-2 text-sm">
                 {[
-                  ["Servicios", "#servicios"],
-                  ["Opiniones", "#opiniones"],
-                  ["Sobre mí", "#sobre"],
-                  ["Contacto", "#contacto"],
+                  ["Publicaciones", "/#publicaciones"],
+                  ["Servicios", "/#servicios"],
+                  ["Opiniones", "/#opiniones"],
+                  ["Sobre mí", "/#sobre"],
+                  ["Contacto", "/#contacto"],
                 ].map(([label, href]) => (
                   <a
                     key={label}
                     href={href}
                     className="transition-colors btn-sage w-full justify-between"
-                    onClick={() => setOpen(false)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setOpen(false);
+                      onNavigate(href);
+                    }}
                   >
                     {label} <ArrowRight size={16} />
                   </a>
                 ))}
                 <a
-                  href="#trabajos"
+                  href="/#trabajos"
                   className="transition-colors btn-sage rounded-xl border px-3 py-2 inline-flex items-center gap-2 justify-center hover:bg-[var(--charcoal)] hover:text-white"
                   style={{
                     borderColor: PALETTE.charcoal,
                     borderWidth: "1px",
                     borderStyle: "solid",
                   }}
-                  onClick={() => setOpen(false)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setOpen(false);
+                    onNavigate("/#trabajos");
+                  }}
                 >
                   Ver trabajos <ArrowRight size={16} />
                 </a>
@@ -244,9 +379,13 @@ function Header() {
           className={`relative mx-auto max-w-[1400px] hidden md:flex items-center justify-between px-5 md:px-10 ${topBarPadding}`}
         >
           <a
-            href="#top"
+            href="/#top"
             className="group inline-flex items-end gap-3"
             aria-label="SG Estudio Creativo"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate("/#top");
+            }}
           >
             <span
               className={`font-black tracking-tight brand-sg-md leading-none transition-all ${logoSize}`}
@@ -268,22 +407,35 @@ function Header() {
           {/* Nav */}
           <nav className="flex items-center gap-2 text-sm">
             {[
-              ["Servicios", "#servicios"],
-              ["Opiniones", "#opiniones"],
-              ["Sobre mí", "#sobre"],
-              ["Contacto", "#contacto"],
+              ["Publicaciones", "/#publicaciones"],
+              ["Servicios", "/#servicios"],
+              ["Opiniones", "/#opiniones"],
+              ["Sobre mí", "/#sobre"],
+              ["Contacto", "/#contacto"],
             ].map(([label, href]) => (
-              <a key={label} href={href} className="transition-colors btn-sage">
+              <a
+                key={label}
+                href={href}
+                className="transition-colors btn-sage"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onNavigate(href);
+                }}
+              >
                 {label}
               </a>
             ))}
             <a
-              href="#trabajos"
+              href="/#trabajos"
               className="transition-colors btn-sage rounded-full border px-3 py-1 inline-flex items-center gap-2 hover:bg-[var(--charcoal)] hover:text-white"
               style={{
                 borderColor: PALETTE.charcoal,
                 borderWidth: "1px",
                 borderStyle: "solid",
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigate("/#trabajos");
               }}
             >
               Ver trabajos <ArrowRight size={16} />
@@ -361,8 +513,13 @@ function Projects() {
           Trabajos seleccionados
         </h2>
         <a
-          href="#contacto"
+          href="/#contacto"
           className="hidden md:inline-block text-sm underline btn-sage"
+          onClick={(e) => {
+            e.preventDefault();
+            window.history.pushState({}, "", "/#contacto");
+            window.dispatchEvent(new HashChangeEvent("hashchange"));
+          }}
         >
           ¿Tenés un proyecto? Conversemos
         </a>
@@ -388,6 +545,183 @@ function Projects() {
           </div>
         ))}
       </div>
+    </section>
+  );
+}
+
+function Posts({ onNavigate }) {
+  if (!posts || posts.length === 0) return null;
+  const scrollerRef = React.useRef(null);
+  const scrollByCards = (dir) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const card = el.querySelector('[data-card="post"]');
+    const step = card ? card.getBoundingClientRect().width + 24 : 360 + 24; // width + gap
+    el.scrollBy({ left: dir * step * 3, behavior: "smooth" });
+  };
+  const showArrows = posts.length > 3;
+  return (
+    <section
+      id="publicaciones"
+      className="px-5 md:px-10 mt-20 md:mt-28 scroll-mt-24 md:scroll-mt-28"
+    >
+      <div className="flex items-end justify-between">
+        <h2 className="text-2xl md:text-3xl tracking-wide">Publicaciones</h2>
+        {showArrows && (
+          <div className="hidden md:flex items-center gap-2">
+            <button className="btn-sage px-3 py-1 rounded-full border" style={{borderColor: PALETTE.charcoal}} onClick={() => scrollByCards(-1)}>
+              ←
+            </button>
+            <button className="btn-sage px-3 py-1 rounded-full border" style={{borderColor: PALETTE.charcoal}} onClick={() => scrollByCards(1)}>
+              →
+            </button>
+          </div>
+        )}
+      </div>
+      <div
+        ref={scrollerRef}
+        className="mt-8 flex gap-6 overflow-x-auto snap-x snap-mandatory pb-2"
+        style={{scrollbarWidth: "thin"}}
+      >
+        {posts.map((p) => (
+          <div key={p.slug} className="w-[360px] snap-start shrink-0" data-card="post">
+            <PostCard post={p} onNavigate={onNavigate} />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function PostCard({ post, onNavigate }) {
+  const pic = getPostPicture(post.slug, post.cover || "cover");
+  const [loaded, setLoaded] = React.useState(false);
+  return (
+    <article className="group rounded-3xl overflow-hidden border shadow-sm" style={{ borderColor: "#00000012" }}>
+      <div className="relative aspect-[4/3]">
+        {pic ? (
+          <>
+            <picture>
+              {(pic.sources ? (Array.isArray(pic.sources) ? pic.sources : [pic.sources]) : []).map((s, idx) => (
+                <source key={s?.srcset || s?.src || idx} srcSet={s?.srcset || s?.src} type={s?.type} sizes="(min-width:1280px) 33vw, (min-width:640px) 50vw, 100vw" />
+              ))}
+              <img
+                src={pic.img.src}
+                alt={post.title}
+                className={`w-full h-full object-cover transition-[filter,opacity] duration-500 ${loaded ? "opacity-100" : "opacity-80 blur-[2px]"}`}
+                loading="lazy"
+                decoding="async"
+                sizes="(min-width:1280px) 33vw, (min-width:640px) 50vw, 100vw"
+                onLoad={() => setLoaded(true)}
+                onError={() => setLoaded(true)}
+              />
+            </picture>
+            {!loaded && <div className="absolute inset-0 animate-pulse" style={{ background: "#E6E2DA" }} />}
+          </>
+        ) : (
+          <PlaceholderImage label={post.title} />
+        )}
+      </div>
+      <div className="p-5 flex items-center justify-between">
+        <div>
+          <h3 className="text-base md:text-lg">{post.title}</h3>
+          {post.tag && (
+            <p className="text-xs md:text-sm opacity-70">{post.tag}</p>
+          )}
+        </div>
+        <a
+          href={`/post/${encodeURIComponent(decodeURIComponent(post.slug))}`}
+          className="text-xs md:text-sm opacity-90 transition-colors btn-sage"
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigate(`/post/${encodeURIComponent(decodeURIComponent(post.slug))}`);
+          }}
+        >
+          Leer
+        </a>
+      </div>
+    </article>
+  );
+}
+
+function PostDetail({ post }) {
+  const hero = getPostPicture(post.slug, post.cover || "cover");
+  const gallery = (post.gallery || []).map((name) => getPostPicture(post.slug, name)).filter(Boolean);
+  const [heroLoaded, setHeroLoaded] = React.useState(false);
+  return (
+    <section className="px-5 md:px-10 mt-14 md:mt-20 mb-16">
+      <a
+        href="/#publicaciones"
+        className="text-sm underline opacity-80"
+        onClick={(e) => {
+          e.preventDefault();
+          window.history.pushState({}, "", "/#publicaciones");
+          // Actualizar estado de path y hash en App y luego scrollear
+          window.dispatchEvent(new PopStateEvent("popstate"));
+          window.dispatchEvent(new HashChangeEvent("hashchange"));
+        }}
+      >
+        ← Volver
+      </a>
+      <h1 className="text-2xl md:text-3xl tracking-wide mt-4">{post.title}</h1>
+      {post.summary && (
+        <p className="opacity-90 mt-3 max-w-prose text-sm md:text-base">{post.summary}</p>
+      )}
+
+      {hero && (
+        <figure className="rounded-3xl overflow-hidden border shadow-sm bg-white mt-6" style={{ borderColor: "#00000012" }}>
+          <div className="relative aspect-[3/4] w-full">
+            <picture className="absolute inset-0">
+              {(hero.sources ? (Array.isArray(hero.sources) ? hero.sources : [hero.sources]) : []).map((s, idx) => (
+                <source key={s?.srcset || s?.src || idx} srcSet={s?.srcset || s?.src} type={s?.type} sizes="100vw" />
+              ))}
+              <img
+                src={hero.img.src}
+                alt={post.title}
+                className={`w-full h-full object-cover transition-[filter,opacity] duration-500 ${heroLoaded ? "opacity-100" : "opacity-80 blur-[2px]"}`}
+                loading="eager"
+                decoding="async"
+                sizes="100vw"
+                onLoad={() => setHeroLoaded(true)}
+                onError={() => setHeroLoaded(true)}
+              />
+            </picture>
+          </div>
+        </figure>
+      )}
+
+      {Array.isArray(post.blocks) && post.blocks.length > 0 && (
+        <div className="mt-8 grid gap-6 max-w-3xl">
+          {post.blocks.map((b, i) => (
+            <div key={i}>
+              {b.title && <h3 className="text-lg font-medium">{b.title}</h3>}
+              {b.text && <p className="opacity-90 mt-2 leading-relaxed">{b.text}</p>}
+              {Array.isArray(b.items) && (
+                <ul className="list-disc list-inside mt-2 opacity-90 space-y-1">
+                  {b.items.map((it, idx) => (
+                    <li key={idx}>{it}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {gallery.length > 0 && (
+        <div className="grid md:grid-cols-2 gap-6 md:gap-8 mt-8">
+          {gallery.map((pic, i) => (
+            <figure key={i} className="rounded-3xl overflow-hidden border shadow-sm bg-white" style={{ borderColor: "#00000012" }}>
+              <picture>
+                {(pic.sources ? (Array.isArray(pic.sources) ? pic.sources : [pic.sources]) : []).map((s, idx) => (
+                  <source key={s?.srcset || s?.src || idx} srcSet={s?.srcset || s?.src} type={s?.type} sizes="(min-width:768px) 50vw, 100vw" />
+                ))}
+                <img src={pic.img.src} alt={post.title} className="w-full h-full object-cover" loading="lazy" decoding="async" sizes="(min-width:768px) 50vw, 100vw" />
+              </picture>
+            </figure>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -455,8 +789,13 @@ function ProjectCard({ title, tag, img, slug }) {
           </p>
         </div>
         <a
-          href={`#proyecto/${slug}`}
+          href={`/proyecto/${encodeURIComponent(decodeURIComponent(slug))}`}
           className="text-xs md:text-sm opacity-90 transition-colors btn-sage"
+          onClick={(e) => {
+            e.preventDefault();
+            window.history.pushState({}, "", `/proyecto/${encodeURIComponent(decodeURIComponent(slug))}`);
+            window.dispatchEvent(new PopStateEvent("popstate"));
+          }}
         >
           Ver
         </a>
@@ -473,7 +812,17 @@ function ProjectDetail({ project }) {
   const [afterLoaded, setAfterLoaded] = React.useState(false);
   return (
     <section className="px-5 md:px-10 mt-14 md:mt-20 mb-16">
-      <a href="#trabajos" className="text-sm underline opacity-80">
+      <a
+        href="/#trabajos"
+        className="text-sm underline opacity-80"
+        onClick={(e) => {
+          e.preventDefault();
+          window.history.pushState({}, "", "/#trabajos");
+          // Actualizar estado de path y hash en App y luego scrollear
+          window.dispatchEvent(new PopStateEvent("popstate"));
+          window.dispatchEvent(new HashChangeEvent("hashchange"));
+        }}
+      >
         ← Volver
       </a>
       <h1 className="text-2xl md:text-3xl tracking-wide mt-4">

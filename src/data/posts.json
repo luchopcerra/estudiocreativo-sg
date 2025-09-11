@@ -1,0 +1,40 @@
+[
+  {
+    "slug": "functional-bathroom-tripartite",
+    "title": "¿Problemas en el baño a la mañana? Con el Tripartito, ¡solucionado (y con estilo)! ✨✨",
+    "tag": "Post original",
+    "summary": "Una organización en tres áreas que ordena el uso diario, suma privacidad y reduce esperas sin ampliar metros.",
+    "cover": "cover",
+    "gallery": ["vanity", "shower", "plan", "toilet"],
+    "blocks": [
+      {
+        "title": "Contexto",
+        "text": "El baño suele ser el primer campo de batalla del día. ¿Cuántas veces quisiste lavarte la cara y la ducha estaba ocupada? ¿O necesitabas el espejo y otra persona estaba en lo suyo?"
+      },
+      {
+        "title": "La idea",
+        "text": "No todo está perdido. Hay una solución de diseño que amo proponer: el baño tripartito —una forma muy inteligente de organizar el espacio."
+      },
+      {
+        "title": "¿En qué consiste?",
+        "items": [
+          "Área lavabo: tu espacio para el arranque de la mañana, con espejo y mesada libre.",
+          "Área sanitarios: con la privacidad necesaria, apartado del resto.",
+          "Área ducha: un rincón solo para vos, para esos minutos de relax."
+        ]
+      },
+      {
+        "title": "Beneficios",
+        "text": "Varias personas pueden usar el baño al mismo tiempo (o casi) sin invadir el espacio del otro. Se terminan las esperas, aumenta la privacidad y la fluidez en casa mejora un montón."
+      },
+      {
+        "title": "Inversión inteligente",
+        "text": "En muchos proyectos, esta solución ayuda a optimizar la inversión en artefactos y obras, evitando gastos extra al concentrar funciones inteligentemente. Diseño funcional que también cuida el bolsillo."
+      },
+      {
+        "title": "¿Te gustaría?",
+        "text": "¿Lo habían pensado alguna vez? ¿Les gustaría tener un baño así en su casa? Si te interesa, lo adaptamos a tu espacio."
+      }
+    ]
+  }
+]

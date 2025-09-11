@@ -23,6 +23,12 @@ Este documento resume cómo está configurado el proyecto, decisiones técnicas 
 - `import.meta.glob` indexa dinámicamente sin `index.js` por carpeta.
 - Preferir WebP/AVIF. Mantener nombres `portada/antes/despues`.
 
+### Publicaciones
+
+- Nueva sección flexible de contenidos: ver `src/data/posts.json`.
+- Imágenes por publicación: `src/assets/posts/{slug}/{cover|<otro>}.{webp|jpg|png|avif}`.
+- En tarjetas se usa `cover`. En detalle se puede listar una `gallery` con nombres de archivos (sin extensión) que existan en la carpeta del slug.
+
 ## Contacto
 
 - Formulario no envía email; abre WhatsApp con mensaje prellenado. Número centralizado en `WHATSAPP_NUMBER` en `src/App.jsx`.
@@ -34,6 +40,7 @@ Este documento resume cómo está configurado el proyecto, decisiones técnicas 
 ## Mantenimiento
 
 - Al agregar proyectos: crear carpeta de slug y las imágenes; el sitemap debe actualizarse (editar `public/sitemap.xml`).
+- Al agregar publicaciones: agregar entrada en `src/data/posts.json` y (opcional) carpeta con imágenes. Si se desean rutas limpias en el futuro, incluirlas en `sitemap.xml` como `/post/<slug>`.
 - Revisar `meta description` y títulos si se agregan vistas nuevas.
 
 ## Roadmap sugerido
