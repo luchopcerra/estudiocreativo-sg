@@ -1063,10 +1063,15 @@ function Contact() {
               >
                 <Phone size={18} /> +54 9 2914 44-1533
               </a>
-              <div className="flex items-center gap-3 opacity-80">
-                <MapPin size={18} /> Villa General Belgrano, Córdoba · Atención
-                online a todo el país
-              </div>
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=R%C3%ADo%20Medio%20657%2C%20Villa%20General%20Belgrano%2C%20C%C3%B3rdoba"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-3 hover:opacity-70"
+              >
+                <MapPin size={18} /> Río Medio 657, Villa General Belgrano,
+                Córdoba · Atención online a todo el país
+              </a>
             </div>
           </div>
 
