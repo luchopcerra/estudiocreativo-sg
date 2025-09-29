@@ -104,6 +104,11 @@ export default function App() {
     window.history.pushState({}, "", u.pathname + u.hash);
     setPath(u.pathname);
     setHash(u.hash);
+    if (!u.hash) {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      });
+    }
   }, []);
 
   React.useEffect(() => {
@@ -141,9 +146,16 @@ export default function App() {
     // Mantener estado de hash para anchors de secciones y permitir volver a home desde detalle
     const onHash = () => {
       const newHash = window.location.hash || "";
-      const onDetail = /^\/proyecto\//.test(window.location.pathname) || /^\/post\//.test(window.location.pathname);
+      const onDetail =
+        /^\/proyecto\//.test(window.location.pathname) ||
+        /^\/post\//.test(window.location.pathname);
       // Si estamos en detalle y el hash apunta a una sección (no detalle), ir a home manteniendo el hash
-      if (onDetail && newHash && !newHash.startsWith("#proyecto/") && !newHash.startsWith("#post/")) {
+      if (
+        onDetail &&
+        newHash &&
+        !newHash.startsWith("#proyecto/") &&
+        !newHash.startsWith("#post/")
+      ) {
         window.history.replaceState({}, "", `/${newHash}`);
         setPath("/");
         setHash(newHash);
@@ -172,7 +184,7 @@ export default function App() {
   const detailSlug = projMatch ? projMatch[1] : null;
   const project = detailSlug
     ? projects.find(
-        (p) => decodeURIComponent(p.slug) === decodeURIComponent(detailSlug),
+        (p) => decodeURIComponent(p.slug) === decodeURIComponent(detailSlug)
       )
     : null;
 
@@ -180,7 +192,7 @@ export default function App() {
   const postSlug = pstMatch ? pstMatch[1] : null;
   const post = postSlug
     ? posts.find(
-        (p) => decodeURIComponent(p.slug) === decodeURIComponent(postSlug),
+        (p) => decodeURIComponent(p.slug) === decodeURIComponent(postSlug)
       )
     : null;
 
@@ -502,7 +514,7 @@ function Hero() {
   );
 }
 
-function Projects() {
+function Projects({ onNavigate }) {
   return (
     <section
       id="trabajos"
@@ -526,7 +538,13 @@ function Projects() {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8 mt-8">
         {projects.map((p, i) => (
-          <ProjectCard key={i} title={p.title} tag={p.tag} slug={p.slug} />
+          <ProjectCard
+            key={i}
+            title={p.title}
+            tag={p.tag}
+            slug={p.slug}
+            onNavigate={onNavigate}
+          />
         ))}
       </div>
 
@@ -569,10 +587,18 @@ function Posts({ onNavigate }) {
         <h2 className="text-2xl md:text-3xl tracking-wide">Publicaciones</h2>
         {showArrows && (
           <div className="hidden md:flex items-center gap-2">
-            <button className="btn-sage px-3 py-1 rounded-full border" style={{borderColor: PALETTE.charcoal}} onClick={() => scrollByCards(-1)}>
+            <button
+              className="btn-sage px-3 py-1 rounded-full border"
+              style={{ borderColor: PALETTE.charcoal }}
+              onClick={() => scrollByCards(-1)}
+            >
               ←
             </button>
-            <button className="btn-sage px-3 py-1 rounded-full border" style={{borderColor: PALETTE.charcoal}} onClick={() => scrollByCards(1)}>
+            <button
+              className="btn-sage px-3 py-1 rounded-full border"
+              style={{ borderColor: PALETTE.charcoal }}
+              onClick={() => scrollByCards(1)}
+            >
               →
             </button>
           </div>
@@ -581,10 +607,14 @@ function Posts({ onNavigate }) {
       <div
         ref={scrollerRef}
         className="mt-8 flex gap-6 overflow-x-auto snap-x snap-mandatory pb-2"
-        style={{scrollbarWidth: "thin"}}
+        style={{ scrollbarWidth: "thin" }}
       >
         {posts.map((p) => (
-          <div key={p.slug} className="w-[360px] snap-start shrink-0" data-card="post">
+          <div
+            key={p.slug}
+            className="w-[360px] snap-start shrink-0"
+            data-card="post"
+          >
             <PostCard post={p} onNavigate={onNavigate} />
           </div>
         ))}
@@ -596,45 +626,95 @@ function Posts({ onNavigate }) {
 function PostCard({ post, onNavigate }) {
   const pic = getPostPicture(post.slug, post.cover || "cover");
   const [loaded, setLoaded] = React.useState(false);
+  const isNew = React.useMemo(() => {
+    if (!post?.date) return false;
+    const postDate = new Date(`${post.date}T00:00:00Z`);
+    if (Number.isNaN(postDate.getTime())) return false;
+    const diff = Date.now() - postDate.getTime();
+    return diff >= 0 && diff < 7 * 24 * 60 * 60 * 1000;
+  }, [post?.date]);
   return (
-    <article className="group rounded-3xl overflow-hidden border shadow-sm" style={{ borderColor: "#00000012" }}>
-      <div className="relative aspect-[4/3]">
+    <article
+      className="group flex h-full flex-col overflow-hidden rounded-3xl border shadow-sm"
+      style={{ borderColor: "#00000012" }}
+    >
+      <div className="relative aspect-[4/3] overflow-hidden">
         {pic ? (
-          <>
-            <picture>
-              {(pic.sources ? (Array.isArray(pic.sources) ? pic.sources : [pic.sources]) : []).map((s, idx) => (
-                <source key={s?.srcset || s?.src || idx} srcSet={s?.srcset || s?.src} type={s?.type} sizes="(min-width:1280px) 33vw, (min-width:640px) 50vw, 100vw" />
-              ))}
-              <img
-                src={pic.img.src}
-                alt={post.title}
-                className={`w-full h-full object-cover transition-[filter,opacity] duration-500 ${loaded ? "opacity-100" : "opacity-80 blur-[2px]"}`}
-                loading="lazy"
-                decoding="async"
+          <picture className="absolute inset-0">
+            {(pic.sources
+              ? Array.isArray(pic.sources)
+                ? pic.sources
+                : [pic.sources]
+              : []
+            ).map((s, idx) => (
+              <source
+                key={s?.srcset || s?.src || idx}
+                srcSet={s?.srcset || s?.src}
+                type={s?.type}
                 sizes="(min-width:1280px) 33vw, (min-width:640px) 50vw, 100vw"
-                onLoad={() => setLoaded(true)}
-                onError={() => setLoaded(true)}
               />
-            </picture>
-            {!loaded && <div className="absolute inset-0 animate-pulse" style={{ background: "#E6E2DA" }} />}
-          </>
+            ))}
+            <img
+              src={pic.img.src}
+              alt={post.title}
+              className={`h-full w-full object-cover transition-[filter,opacity] duration-500 ${loaded ? "opacity-100" : "opacity-80 blur-[2px]"}`}
+              loading="lazy"
+              decoding="async"
+              sizes="(min-width:1280px) 33vw, (min-width:640px) 50vw, 100vw"
+              onLoad={() => setLoaded(true)}
+              onError={() => setLoaded(true)}
+            />
+          </picture>
         ) : (
-          <PlaceholderImage label={post.title} />
+          <div className="absolute inset-0">
+            <PlaceholderImage label={post.title} />
+          </div>
+        )}
+        {!loaded && (
+          <div
+            className="absolute inset-0 animate-pulse"
+            style={{ background: "#E6E2DA" }}
+          />
+        )}
+        {isNew && (
+          <span
+            className="absolute top-3 left-3 px-3 py-1 text-xs font-medium rounded-full"
+            style={{
+              backgroundColor: PALETTE.sage,
+              color: "white",
+              boxShadow: "0 4px 10px -6px rgba(0,0,0,0.6)",
+            }}
+          >
+            New Post!
+          </span>
         )}
       </div>
-      <div className="p-5 flex items-center justify-between">
-        <div>
-          <h3 className="text-base md:text-lg">{post.title}</h3>
+      <div className="flex flex-1 flex-col p-5">
+        <div className="flex-1">
+          <h3
+            className="text-base md:text-lg leading-snug"
+            style={{
+              display: "-webkit-box",
+              WebkitBoxOrient: "vertical",
+              WebkitLineClamp: 3,
+              overflow: "hidden",
+              minHeight: "3.5rem",
+            }}
+          >
+            {post.title}
+          </h3>
           {post.tag && (
             <p className="text-xs md:text-sm opacity-70">{post.tag}</p>
           )}
         </div>
         <a
           href={`/post/${encodeURIComponent(decodeURIComponent(post.slug))}`}
-          className="text-xs md:text-sm opacity-90 transition-colors btn-sage"
+          className="self-end mt-4 text-xs md:text-sm opacity-90 transition-colors btn-sage"
           onClick={(e) => {
             e.preventDefault();
-            onNavigate(`/post/${encodeURIComponent(decodeURIComponent(post.slug))}`);
+            onNavigate(
+              `/post/${encodeURIComponent(decodeURIComponent(post.slug))}`
+            );
           }}
         >
           Leer
@@ -646,8 +726,20 @@ function PostCard({ post, onNavigate }) {
 
 function PostDetail({ post }) {
   const hero = getPostPicture(post.slug, post.cover || "cover");
-  const gallery = (post.gallery || []).map((name) => getPostPicture(post.slug, name)).filter(Boolean);
+  const gallery = (post.gallery || [])
+    .map((name) => getPostPicture(post.slug, name))
+    .filter(Boolean);
   const [heroLoaded, setHeroLoaded] = React.useState(false);
+  const formattedDate = React.useMemo(() => {
+    if (!post.date) return null;
+    const parsed = new Date(post.date);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return parsed.toLocaleDateString("es-AR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  }, [post.date]);
   return (
     <section className="px-5 md:px-10 mt-14 md:mt-20 mb-16">
       <a
@@ -663,60 +755,143 @@ function PostDetail({ post }) {
       >
         ← Volver
       </a>
-      <h1 className="text-2xl md:text-3xl tracking-wide mt-4">{post.title}</h1>
-      {post.summary && (
-        <p className="opacity-90 mt-3 max-w-prose text-sm md:text-base">{post.summary}</p>
-      )}
-
-      {hero && (
-        <figure className="rounded-3xl overflow-hidden border shadow-sm bg-white mt-6" style={{ borderColor: "#00000012" }}>
-          <div className="relative aspect-[3/4] w-full">
-            <picture className="absolute inset-0">
-              {(hero.sources ? (Array.isArray(hero.sources) ? hero.sources : [hero.sources]) : []).map((s, idx) => (
-                <source key={s?.srcset || s?.src || idx} srcSet={s?.srcset || s?.src} type={s?.type} sizes="100vw" />
-              ))}
-              <img
-                src={hero.img.src}
-                alt={post.title}
-                className={`w-full h-full object-cover transition-[filter,opacity] duration-500 ${heroLoaded ? "opacity-100" : "opacity-80 blur-[2px]"}`}
-                loading="eager"
-                decoding="async"
-                sizes="100vw"
-                onLoad={() => setHeroLoaded(true)}
-                onError={() => setHeroLoaded(true)}
-              />
-            </picture>
-          </div>
-        </figure>
-      )}
-
-      {Array.isArray(post.blocks) && post.blocks.length > 0 && (
-        <div className="mt-8 grid gap-6 max-w-3xl">
-          {post.blocks.map((b, i) => (
-            <div key={i}>
-              {b.title && <h3 className="text-lg font-medium">{b.title}</h3>}
-              {b.text && <p className="opacity-90 mt-2 leading-relaxed">{b.text}</p>}
-              {Array.isArray(b.items) && (
-                <ul className="list-disc list-inside mt-2 opacity-90 space-y-1">
-                  {b.items.map((it, idx) => (
-                    <li key={idx}>{it}</li>
-                  ))}
-                </ul>
+      <div className="mt-4 lg:mt-10 lg:grid lg:grid-cols-[minmax(260px,320px)_1fr] lg:items-start lg:gap-12 xl:gap-16">
+        <aside className="space-y-6 lg:space-y-8">
+          <div className="rounded-3xl border border-black/10 bg-white/80 px-6 py-8 shadow-sm backdrop-blur mb-8 lg:mb-0">
+            <div className="space-y-3">
+              <div className="space-y-2">
+                {post.tag && (
+                  <span className="inline-flex items-center rounded-full bg-black/5 px-3 py-1 text-xs font-medium uppercase tracking-wide text-black/70">
+                    {post.tag}
+                  </span>
+                )}
+                <h1 className="text-2xl md:text-3xl tracking-wide leading-tight">
+                  {post.title}
+                </h1>
+              </div>
+              {post.summary && (
+                <p className="opacity-90 text-sm md:text-base leading-relaxed">
+                  {post.summary}
+                </p>
               )}
             </div>
-          ))}
+            {formattedDate && (
+              <div className="mt-6 border-t border-black/10 pt-6 text-xs uppercase tracking-[0.1em] text-black/60">
+                Publicado el {formattedDate}
+              </div>
+            )}
+          </div>
+          <div className="hidden lg:block rounded-3xl border border-black/10 bg-white/60 px-5 py-4 text-sm leading-relaxed text-black/75">
+            <p>
+              Guardá tus ideas favoritas para llevarlas a tu próximo proyecto.
+              Si querés que las trabajemos juntas, escribime.
+            </p>
+            <a
+              href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+                `Hola SG Estudio Creativo, me interesó la publicación "${post.title}" y quiero hablar sobre un proyecto.`
+              )}`}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#436a5b] px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-white transition hover:bg-[#365349]"
+            >
+              Escribime por WhatsApp
+              <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        </aside>
+
+        <div className="space-y-10 lg:space-y-12">
+          {hero && (
+            <figure
+              className="rounded-3xl overflow-hidden border shadow-sm bg-white"
+              style={{ borderColor: "#00000012" }}
+            >
+              <div className="relative aspect-[3/4] w-full">
+                <picture className="absolute inset-0">
+                  {(hero.sources
+                    ? Array.isArray(hero.sources)
+                      ? hero.sources
+                      : [hero.sources]
+                    : []
+                  ).map((s, idx) => (
+                    <source
+                      key={s?.srcset || s?.src || idx}
+                      srcSet={s?.srcset || s?.src}
+                      type={s?.type}
+                      sizes="100vw"
+                    />
+                  ))}
+                  <img
+                    src={hero.img.src}
+                    alt={post.title}
+                    className={`h-full w-full object-cover transition-[filter,opacity] duration-500 ${
+                      heroLoaded ? "opacity-100" : "opacity-80 blur-[2px]"
+                    }`}
+                    loading="eager"
+                    decoding="async"
+                    sizes="100vw"
+                    onLoad={() => setHeroLoaded(true)}
+                    onError={() => setHeroLoaded(true)}
+                  />
+                </picture>
+              </div>
+            </figure>
+          )}
+
+          {Array.isArray(post.blocks) && post.blocks.length > 0 && (
+            <div className="grid gap-6 max-w-3xl">
+              {post.blocks.map((b, i) => (
+                <div key={i}>
+                  {b.title && (
+                    <h3 className="text-lg font-medium">{b.title}</h3>
+                  )}
+                  {b.text && (
+                    <p className="opacity-90 mt-2 leading-relaxed">{b.text}</p>
+                  )}
+                  {Array.isArray(b.items) && (
+                    <ul className="list-disc list-inside mt-2 opacity-90 space-y-1">
+                      {b.items.map((it, idx) => (
+                        <li key={idx}>{it}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {gallery.length > 0 && (
         <div className="grid md:grid-cols-2 gap-6 md:gap-8 mt-8">
           {gallery.map((pic, i) => (
-            <figure key={i} className="rounded-3xl overflow-hidden border shadow-sm bg-white" style={{ borderColor: "#00000012" }}>
+            <figure
+              key={i}
+              className="rounded-3xl overflow-hidden border shadow-sm bg-white"
+              style={{ borderColor: "#00000012" }}
+            >
               <picture>
-                {(pic.sources ? (Array.isArray(pic.sources) ? pic.sources : [pic.sources]) : []).map((s, idx) => (
-                  <source key={s?.srcset || s?.src || idx} srcSet={s?.srcset || s?.src} type={s?.type} sizes="(min-width:768px) 50vw, 100vw" />
+                {(pic.sources
+                  ? Array.isArray(pic.sources)
+                    ? pic.sources
+                    : [pic.sources]
+                  : []
+                ).map((s, idx) => (
+                  <source
+                    key={s?.srcset || s?.src || idx}
+                    srcSet={s?.srcset || s?.src}
+                    type={s?.type}
+                    sizes="(min-width:768px) 50vw, 100vw"
+                  />
                 ))}
-                <img src={pic.img.src} alt={post.title} className="w-full h-full object-cover" loading="lazy" decoding="async" sizes="(min-width:768px) 50vw, 100vw" />
+                <img
+                  src={pic.img.src}
+                  alt={post.title}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                  sizes="(min-width:768px) 50vw, 100vw"
+                />
               </picture>
             </figure>
           ))}
@@ -726,7 +901,7 @@ function PostDetail({ post }) {
   );
 }
 
-function ProjectCard({ title, tag, img, slug }) {
+function ProjectCard({ title, tag, img, slug, onNavigate }) {
   const pic = getPicture(slug, "portada");
   const [loaded, setLoaded] = React.useState(false);
   return (
@@ -793,8 +968,13 @@ function ProjectCard({ title, tag, img, slug }) {
           className="text-xs md:text-sm opacity-90 transition-colors btn-sage"
           onClick={(e) => {
             e.preventDefault();
-            window.history.pushState({}, "", `/proyecto/${encodeURIComponent(decodeURIComponent(slug))}`);
-            window.dispatchEvent(new PopStateEvent("popstate"));
+            const href = `/proyecto/${encodeURIComponent(decodeURIComponent(slug))}`;
+            if (typeof onNavigate === "function") {
+              onNavigate(href);
+            } else {
+              window.history.pushState({}, "", href);
+              window.dispatchEvent(new PopStateEvent("popstate"));
+            }
           }}
         >
           Ver
@@ -974,7 +1154,9 @@ function About() {
             decoding="async"
             sizes="(min-width:768px) 280px, 160px"
           />
-          <figcaption className="sr-only">Sol Gauna — Estudio Creativo</figcaption>
+          <figcaption className="sr-only">
+            Sol Gauna — Estudio Creativo
+          </figcaption>
         </figure>
       </div>
       <div>

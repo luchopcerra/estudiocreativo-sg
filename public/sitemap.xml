@@ -26,7 +26,12 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://estudiocreativo-sg.com/post/functional-bathroom-tripartite</loc>
+    <loc>https://estudiocreativo-sg.com/post/ba%C3%B1o-funcional-tripartito</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://estudiocreativo-sg.com/post/cocina-funcional-en-formato-c</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

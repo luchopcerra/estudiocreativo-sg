@@ -1,6 +1,6 @@
 [
   {
-    "slug": "functional-bathroom-tripartite",
+    "slug": "baño-funcional-tripartito",
     "title": "¿Problemas en el baño a la mañana? Con el Tripartito, ¡solucionado (y con estilo)! ✨✨",
     "tag": "Post original",
     "summary": "Una organización en tres áreas que ordena el uso diario, suma privacidad y reduce esperas sin ampliar metros.",
@@ -35,6 +35,42 @@
         "title": "¿Te gustaría?",
         "text": "¿Lo habían pensado alguna vez? ¿Les gustaría tener un baño así en su casa? Si te interesa, lo adaptamos a tu espacio."
       }
-    ]
+    ],
+    "date": "2025-9-2"
+  },
+  {
+    "slug": "cocina-funcional-en-formato-c",
+    "title": "¡Cocina funcional y vivible! Diseño pensado para el día a día. 🍳✨",
+    "description": "Cada módulo tiene su propósito y la estética surge sola.",
+    "tag": "Diseño funcional",
+    "summary": "Cada módulo responde a un uso concreto para ahorrar pasos, tener todo a mano y dejar que la estética surja sola.",
+    "cover": "cover",
+    "gallery": [
+      "vista-general",
+      "modulos-frente",
+      "detalle-esquinero",
+      "detalle-lavatorio",
+      "zonificacion-triangulo",
+      "zonificacion-areas"
+    ],
+    "blocks": [
+      {
+        "title": "Pensada desde el uso",
+        "text": "Esta cocina no se diseñó para lucirse; se diseñó para vivirse."
+      },
+      {
+        "title": "Cada cosa en su lugar",
+        "text": "Cada cajón, cada estante y cada rincón tiene un propósito. Nada quedó al azar."
+      },
+      {
+        "title": "Movimiento optimizado",
+        "text": "El objetivo es ahorrar movimientos y que cada cosa esté en el lugar exacto donde se necesita."
+      },
+      {
+        "title": "La estética como consecuencia",
+        "text": "Cuando la arquitectura se piensa desde el uso real, la estética aparece sola y se sostiene en el tiempo."
+      }
+    ],
+    "date": "2025-9-29"
   }
 ]
