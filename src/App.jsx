@@ -628,10 +628,28 @@ function PostCard({ post, onNavigate }) {
   const [loaded, setLoaded] = React.useState(false);
   const isNew = React.useMemo(() => {
     if (!post?.date) return false;
-    const postDate = new Date(`${post.date}T00:00:00Z`);
+
+    // Crear un objeto Date a partir de la cadena.
+    // Para formatos "AAAA-M-D" o "AAAA-MM-DD", new Date() suele interpretarlo
+    // como hora local.
+    const postDate = new Date(post.date);
+
+    // Si la fecha no es válida después de la creación
     if (Number.isNaN(postDate.getTime())) return false;
+
+    // Establecer la hora a medianoche (00:00:00.000) en UTC para
+    // asegurar una comparación consistente e independiente de la zona horaria
+    // (similar al efecto de T00:00:00Z).
+    postDate.setUTCHours(0, 0, 0, 0);
+
     const diff = Date.now() - postDate.getTime();
-    return diff >= 0 && diff < 7 * 24 * 60 * 60 * 1000;
+
+    // Comprobar si la diferencia es mayor o igual a 0 (la fecha ya pasó)
+    // y menor que 7 días (en milisegundos).
+    // 7 días * 24 horas/día * 60 minutos/hora * 60 segundos/minuto * 1000 milisegundos/segundo
+    const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+
+    return diff >= 0 && diff < sevenDaysInMs;
   }, [post?.date]);
   return (
     <article
