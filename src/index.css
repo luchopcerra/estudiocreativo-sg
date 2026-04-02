@@ -4,15 +4,21 @@
 
 @layer base {
   :root {
-    color: #101010;
-    --charcoal: #101010;
-    --sage: #97a08e;
+    /* Color Palette - SG Estudio */
+    --sage: #959c89;
     --sage-dark: #86907e;
+    --ivory: #f6f3ee;
+    --charcoal: #101010;
+    --graphite: #2b2b2b;
+    --border-light: #00000012;
+    --gradient-sage: linear-gradient(135deg, var(--sage) 0%, var(--sage-dark) 100%);
+
+    color: var(--charcoal);
   }
 
   html {
     scroll-behavior: smooth;
-    overflow-x: hidden; /* Fallback extra por si algún hijo expande el viewport */
+    overflow-x: hidden;
   }
 
   @font-face {
@@ -36,7 +42,7 @@
       Arial,
       "Apple Color Emoji",
       "Segoe UI Emoji";
-    overflow-x: hidden; /* Previene scroll horizontal en mobile */
+    overflow-x: hidden;
   }
 }
 
@@ -72,5 +78,30 @@
   .btn-sage:hover {
     background: var(--sage);
     color: #fff;
+  }
+}
+
+/* Focus styles for accessibility */
+@layer utilities {
+  .focus-ring {
+    @apply outline-none ring-2 ring-offset-2 ring-[var(--sage)] ring-offset-[var(--ivory)];
+  }
+}
+
+/* Animation utilities */
+@layer utilities {
+  .fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
