@@ -14,6 +14,7 @@ import projects from "./data/projects.json";
 import posts from "./data/posts.json";
 import testimonials from "./data/testimonials.json";
 import services from "./data/services.json";
+import { buildSeo, routePath } from "./seo";
 
 const PALETTE = {
   sage: "#959c89", // verde salvia (banda)
@@ -43,8 +44,8 @@ const pictureMods = import.meta.glob(
   "./assets/proyectos/*/*.{jpg,jpeg,png,webp,avif}",
   {
     eager: true,
-    query: "?as=picture&w=480;768;1200;1600&format=avif;webp;jpg&quality=75",
-  }
+    query: "?as=picture&w=480;768;1200;1600&format=avif;webp&quality=75",
+  },
 );
 const PICTURES = Object.entries(pictureMods).reduce((acc, [path, mod]) => {
   const parts = path.split("/"); // [".", "assets", "proyectos", slug, filename?query]
@@ -69,8 +70,8 @@ const postPictureMods = import.meta.glob(
   "./assets/posts/*/*.{jpg,jpeg,png,webp,avif}",
   {
     eager: true,
-    query: "?as=picture&w=480;768;1200;1600&format=avif;webp;jpg&quality=75",
-  }
+    query: "?as=picture&w=480;768;1200;1600&format=avif;webp&quality=75",
+  },
 );
 const POST_PICTURES = Object.entries(postPictureMods).reduce(
   (acc, [path, mod]) => {
@@ -86,7 +87,7 @@ const POST_PICTURES = Object.entries(postPictureMods).reduce(
     }
     return acc;
   },
-  {}
+  {},
 );
 const getPostPicture = (slug, variant) => {
   const key = canonSlug(slug);
@@ -181,20 +182,42 @@ export default function App() {
 
   // rutas detalle limpias: /proyecto/<slug> y /post/<slug>
   const projMatch = path.match(/^\/proyecto\/(.+)$/);
-  const detailSlug = projMatch ? projMatch[1] : null;
+  const detailSlug = projMatch ? projMatch[1].replace(/\/+$/, "") : null;
   const project = detailSlug
-    ? projects.find(
-        (p) => decodeURIComponent(p.slug) === decodeURIComponent(detailSlug)
-      )
+    ? projects.find((p) => canonSlug(p.slug) === canonSlug(detailSlug))
     : null;
 
   const pstMatch = path.match(/^\/post\/(.+)$/);
-  const postSlug = pstMatch ? pstMatch[1] : null;
+  const postSlug = pstMatch ? pstMatch[1].replace(/\/+$/, "") : null;
   const post = postSlug
-    ? posts.find(
-        (p) => decodeURIComponent(p.slug) === decodeURIComponent(postSlug)
-      )
+    ? posts.find((p) => canonSlug(p.slug) === canonSlug(postSlug))
     : null;
+
+  React.useEffect(() => {
+    const seo = project
+      ? buildSeo({ type: "project", item: project })
+      : post
+        ? buildSeo({ type: "post", item: post })
+        : buildSeo();
+
+    document.title = seo.title;
+
+    const setAttr = (selector, attr, value) => {
+      const el = document.head.querySelector(selector);
+      if (el && value) el.setAttribute(attr, value);
+    };
+
+    setAttr('link[rel="canonical"]', "href", seo.canonical);
+    setAttr('meta[name="description"]', "content", seo.description);
+    setAttr('meta[property="og:title"]', "content", seo.title);
+    setAttr('meta[property="og:description"]', "content", seo.description);
+    setAttr('meta[property="og:url"]', "content", seo.url);
+    setAttr('meta[property="og:type"]', "content", seo.type);
+    setAttr('meta[property="og:image"]', "content", seo.image);
+    setAttr('meta[name="twitter:title"]', "content", seo.title);
+    setAttr('meta[name="twitter:description"]', "content", seo.description);
+    setAttr('meta[name="twitter:image"]', "content", seo.image);
+  }, [project, post]);
 
   return (
     <div
@@ -726,13 +749,11 @@ function PostCard({ post, onNavigate }) {
           )}
         </div>
         <a
-          href={`/post/${encodeURIComponent(decodeURIComponent(post.slug))}`}
+          href={routePath("post", post.slug)}
           className="self-end mt-4 text-xs md:text-sm opacity-90 transition-colors btn-sage"
           onClick={(e) => {
             e.preventDefault();
-            onNavigate(
-              `/post/${encodeURIComponent(decodeURIComponent(post.slug))}`
-            );
+            onNavigate(routePath("post", post.slug));
           }}
         >
           Leer
@@ -806,7 +827,7 @@ function PostDetail({ post }) {
             </p>
             <a
               href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-                `Hola SG Estudio Creativo, me interesó la publicación "${post.title}" y quiero hablar sobre un proyecto.`
+                `Hola SG Estudio Creativo, me interesó la publicación "${post.title}" y quiero hablar sobre un proyecto.`,
               )}`}
               target="_blank"
               rel="noreferrer"
@@ -982,11 +1003,11 @@ function ProjectCard({ title, tag, img, slug, onNavigate }) {
           </p>
         </div>
         <a
-          href={`/proyecto/${encodeURIComponent(decodeURIComponent(slug))}`}
+          href={routePath("proyecto", slug)}
           className="text-xs md:text-sm opacity-90 transition-colors btn-sage"
           onClick={(e) => {
             e.preventDefault();
-            const href = `/proyecto/${encodeURIComponent(decodeURIComponent(slug))}`;
+            const href = routePath("proyecto", slug);
             if (typeof onNavigate === "function") {
               onNavigate(href);
             } else {
@@ -1221,7 +1242,7 @@ function Contact() {
     if (detalle.trim()) parts.push(`Mi proyecto: ${detalle.trim()}`);
     const text = parts.join("\n\n");
     const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-      text
+      text,
     )}`;
     window.open(waUrl, "_blank");
   };
