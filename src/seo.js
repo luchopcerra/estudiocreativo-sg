@@ -14,8 +14,14 @@ const decodeSlug = (slug) => {
   }
 };
 
+export const canonSlug = (slug) =>
+  decodeSlug(slug)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
 export const routePath = (type, slug) =>
-  `/${type}/${encodeURIComponent(decodeSlug(slug))}`;
+  `/${type}/${encodeURIComponent(canonSlug(slug))}`;
 
 export const buildSeo = ({ type = "home", item = null } = {}) => {
   if (type === "project" && item) {

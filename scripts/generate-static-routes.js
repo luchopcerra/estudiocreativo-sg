@@ -113,7 +113,10 @@ const renderRoute = (template, route) => {
 const writeRoute = async (template, route) => {
   const routeDir = path.join(
     dist,
-    routePath(route.urlType, route.item.slug).replace(/^\//, ""),
+    decodeURIComponent(routePath(route.urlType, route.item.slug)).replace(
+      /^\//,
+      "",
+    ),
   );
   await mkdir(routeDir, { recursive: true });
   await writeFile(

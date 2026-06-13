@@ -14,7 +14,7 @@ import projects from "./data/projects.json";
 import posts from "./data/posts.json";
 import testimonials from "./data/testimonials.json";
 import services from "./data/services.json";
-import { buildSeo } from "./seo";
+import { buildSeo, routePath } from "./seo";
 
 const PALETTE = {
   sage: "#959c89", // verde salvia (banda)
@@ -44,7 +44,7 @@ const pictureMods = import.meta.glob(
   "./assets/proyectos/*/*.{jpg,jpeg,png,webp,avif}",
   {
     eager: true,
-    query: "?as=picture&w=480;768;1200;1600&format=avif;webp;jpg&quality=75",
+    query: "?as=picture&w=480;768;1200;1600&format=avif;webp&quality=75",
   },
 );
 const PICTURES = Object.entries(pictureMods).reduce((acc, [path, mod]) => {
@@ -70,7 +70,7 @@ const postPictureMods = import.meta.glob(
   "./assets/posts/*/*.{jpg,jpeg,png,webp,avif}",
   {
     eager: true,
-    query: "?as=picture&w=480;768;1200;1600&format=avif;webp;jpg&quality=75",
+    query: "?as=picture&w=480;768;1200;1600&format=avif;webp&quality=75",
   },
 );
 const POST_PICTURES = Object.entries(postPictureMods).reduce(
@@ -184,17 +184,13 @@ export default function App() {
   const projMatch = path.match(/^\/proyecto\/(.+)$/);
   const detailSlug = projMatch ? projMatch[1] : null;
   const project = detailSlug
-    ? projects.find(
-        (p) => decodeURIComponent(p.slug) === decodeURIComponent(detailSlug),
-      )
+    ? projects.find((p) => canonSlug(p.slug) === canonSlug(detailSlug))
     : null;
 
   const pstMatch = path.match(/^\/post\/(.+)$/);
   const postSlug = pstMatch ? pstMatch[1] : null;
   const post = postSlug
-    ? posts.find(
-        (p) => decodeURIComponent(p.slug) === decodeURIComponent(postSlug),
-      )
+    ? posts.find((p) => canonSlug(p.slug) === canonSlug(postSlug))
     : null;
 
   React.useEffect(() => {
@@ -753,13 +749,11 @@ function PostCard({ post, onNavigate }) {
           )}
         </div>
         <a
-          href={`/post/${encodeURIComponent(decodeURIComponent(post.slug))}`}
+          href={routePath("post", post.slug)}
           className="self-end mt-4 text-xs md:text-sm opacity-90 transition-colors btn-sage"
           onClick={(e) => {
             e.preventDefault();
-            onNavigate(
-              `/post/${encodeURIComponent(decodeURIComponent(post.slug))}`,
-            );
+            onNavigate(routePath("post", post.slug));
           }}
         >
           Leer
@@ -1009,11 +1003,11 @@ function ProjectCard({ title, tag, img, slug, onNavigate }) {
           </p>
         </div>
         <a
-          href={`/proyecto/${encodeURIComponent(decodeURIComponent(slug))}`}
+          href={routePath("proyecto", slug)}
           className="text-xs md:text-sm opacity-90 transition-colors btn-sage"
           onClick={(e) => {
             e.preventDefault();
-            const href = `/proyecto/${encodeURIComponent(decodeURIComponent(slug))}`;
+            const href = routePath("proyecto", slug);
             if (typeof onNavigate === "function") {
               onNavigate(href);
             } else {
