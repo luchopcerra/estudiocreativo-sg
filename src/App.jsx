@@ -182,13 +182,13 @@ export default function App() {
 
   // rutas detalle limpias: /proyecto/<slug> y /post/<slug>
   const projMatch = path.match(/^\/proyecto\/(.+)$/);
-  const detailSlug = projMatch ? projMatch[1] : null;
+  const detailSlug = projMatch ? projMatch[1].replace(/\/+$/, "") : null;
   const project = detailSlug
     ? projects.find((p) => canonSlug(p.slug) === canonSlug(detailSlug))
     : null;
 
   const pstMatch = path.match(/^\/post\/(.+)$/);
-  const postSlug = pstMatch ? pstMatch[1] : null;
+  const postSlug = pstMatch ? pstMatch[1].replace(/\/+$/, "") : null;
   const post = postSlug
     ? posts.find((p) => canonSlug(p.slug) === canonSlug(postSlug))
     : null;
