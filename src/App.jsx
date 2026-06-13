@@ -14,6 +14,7 @@ import projects from "./data/projects.json";
 import posts from "./data/posts.json";
 import testimonials from "./data/testimonials.json";
 import services from "./data/services.json";
+import { buildSeo } from "./seo";
 
 const PALETTE = {
   sage: "#959c89", // verde salvia (banda)
@@ -44,7 +45,7 @@ const pictureMods = import.meta.glob(
   {
     eager: true,
     query: "?as=picture&w=480;768;1200;1600&format=avif;webp;jpg&quality=75",
-  }
+  },
 );
 const PICTURES = Object.entries(pictureMods).reduce((acc, [path, mod]) => {
   const parts = path.split("/"); // [".", "assets", "proyectos", slug, filename?query]
@@ -70,7 +71,7 @@ const postPictureMods = import.meta.glob(
   {
     eager: true,
     query: "?as=picture&w=480;768;1200;1600&format=avif;webp;jpg&quality=75",
-  }
+  },
 );
 const POST_PICTURES = Object.entries(postPictureMods).reduce(
   (acc, [path, mod]) => {
@@ -86,7 +87,7 @@ const POST_PICTURES = Object.entries(postPictureMods).reduce(
     }
     return acc;
   },
-  {}
+  {},
 );
 const getPostPicture = (slug, variant) => {
   const key = canonSlug(slug);
@@ -184,7 +185,7 @@ export default function App() {
   const detailSlug = projMatch ? projMatch[1] : null;
   const project = detailSlug
     ? projects.find(
-        (p) => decodeURIComponent(p.slug) === decodeURIComponent(detailSlug)
+        (p) => decodeURIComponent(p.slug) === decodeURIComponent(detailSlug),
       )
     : null;
 
@@ -192,9 +193,35 @@ export default function App() {
   const postSlug = pstMatch ? pstMatch[1] : null;
   const post = postSlug
     ? posts.find(
-        (p) => decodeURIComponent(p.slug) === decodeURIComponent(postSlug)
+        (p) => decodeURIComponent(p.slug) === decodeURIComponent(postSlug),
       )
     : null;
+
+  React.useEffect(() => {
+    const seo = project
+      ? buildSeo({ type: "project", item: project })
+      : post
+        ? buildSeo({ type: "post", item: post })
+        : buildSeo();
+
+    document.title = seo.title;
+
+    const setAttr = (selector, attr, value) => {
+      const el = document.head.querySelector(selector);
+      if (el && value) el.setAttribute(attr, value);
+    };
+
+    setAttr('link[rel="canonical"]', "href", seo.canonical);
+    setAttr('meta[name="description"]', "content", seo.description);
+    setAttr('meta[property="og:title"]', "content", seo.title);
+    setAttr('meta[property="og:description"]', "content", seo.description);
+    setAttr('meta[property="og:url"]', "content", seo.url);
+    setAttr('meta[property="og:type"]', "content", seo.type);
+    setAttr('meta[property="og:image"]', "content", seo.image);
+    setAttr('meta[name="twitter:title"]', "content", seo.title);
+    setAttr('meta[name="twitter:description"]', "content", seo.description);
+    setAttr('meta[name="twitter:image"]', "content", seo.image);
+  }, [project, post]);
 
   return (
     <div
@@ -731,7 +758,7 @@ function PostCard({ post, onNavigate }) {
           onClick={(e) => {
             e.preventDefault();
             onNavigate(
-              `/post/${encodeURIComponent(decodeURIComponent(post.slug))}`
+              `/post/${encodeURIComponent(decodeURIComponent(post.slug))}`,
             );
           }}
         >
@@ -806,7 +833,7 @@ function PostDetail({ post }) {
             </p>
             <a
               href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-                `Hola SG Estudio Creativo, me interesó la publicación "${post.title}" y quiero hablar sobre un proyecto.`
+                `Hola SG Estudio Creativo, me interesó la publicación "${post.title}" y quiero hablar sobre un proyecto.`,
               )}`}
               target="_blank"
               rel="noreferrer"
@@ -1221,7 +1248,7 @@ function Contact() {
     if (detalle.trim()) parts.push(`Mi proyecto: ${detalle.trim()}`);
     const text = parts.join("\n\n");
     const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-      text
+      text,
     )}`;
     window.open(waUrl, "_blank");
   };
