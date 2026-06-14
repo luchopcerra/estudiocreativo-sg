@@ -94,6 +94,69 @@ const getPostPicture = (slug, variant) => {
   return POST_PICTURES?.[key]?.[variant] || null;
 };
 
+const isExternalImage = (value) =>
+  typeof value === "string" && /^https?:\/\//i.test(value);
+
+const getPostCover = (post) =>
+  isExternalImage(post?.cover)
+    ? { external: post.cover }
+    : getPostPicture(post.slug, post.cover || "cover");
+
+function ResponsivePicture({
+  pic,
+  alt,
+  className,
+  sizes,
+  loading = "lazy",
+  onLoad,
+  onError,
+}) {
+  if (!pic) return null;
+
+  if (pic.external) {
+    return (
+      <img
+        src={pic.external}
+        alt={alt}
+        className={className}
+        loading={loading}
+        decoding="async"
+        sizes={sizes}
+        onLoad={onLoad}
+        onError={onError}
+      />
+    );
+  }
+
+  return (
+    <picture>
+      {(pic.sources
+        ? Array.isArray(pic.sources)
+          ? pic.sources
+          : [pic.sources]
+        : []
+      ).map((s, idx) => (
+        <source
+          key={s?.srcset || s?.src || idx}
+          srcSet={s?.srcset || s?.src}
+          type={s?.type}
+          sizes={sizes}
+        />
+      ))}
+      <img
+        src={pic.img.src}
+        alt={alt}
+        className={className}
+        loading={loading}
+        decoding="async"
+        sizes={sizes}
+        onLoad={onLoad}
+        onError={onError}
+      />
+    </picture>
+  );
+}
+
 export default function App() {
   // Router mínimo con History API: paths limpios y anchors para secciones
   const [path, setPath] = React.useState(window.location.pathname);
@@ -647,7 +710,7 @@ function Posts({ onNavigate }) {
 }
 
 function PostCard({ post, onNavigate }) {
-  const pic = getPostPicture(post.slug, post.cover || "cover");
+  const pic = getPostCover(post);
   const [loaded, setLoaded] = React.useState(false);
   const isNew = React.useMemo(() => {
     if (!post?.date) return false;
@@ -681,31 +744,17 @@ function PostCard({ post, onNavigate }) {
     >
       <div className="relative aspect-[4/3] overflow-hidden">
         {pic ? (
-          <picture className="absolute inset-0">
-            {(pic.sources
-              ? Array.isArray(pic.sources)
-                ? pic.sources
-                : [pic.sources]
-              : []
-            ).map((s, idx) => (
-              <source
-                key={s?.srcset || s?.src || idx}
-                srcSet={s?.srcset || s?.src}
-                type={s?.type}
-                sizes="(min-width:1280px) 33vw, (min-width:640px) 50vw, 100vw"
-              />
-            ))}
-            <img
-              src={pic.img.src}
+          <div className="absolute inset-0">
+            <ResponsivePicture
+              pic={pic}
               alt={post.title}
               className={`h-full w-full object-cover transition-[filter,opacity] duration-500 ${loaded ? "opacity-100" : "opacity-80 blur-[2px]"}`}
               loading="lazy"
-              decoding="async"
               sizes="(min-width:1280px) 33vw, (min-width:640px) 50vw, 100vw"
               onLoad={() => setLoaded(true)}
               onError={() => setLoaded(true)}
             />
-          </picture>
+          </div>
         ) : (
           <div className="absolute inset-0">
             <PlaceholderImage label={post.title} />
@@ -764,7 +813,7 @@ function PostCard({ post, onNavigate }) {
 }
 
 function PostDetail({ post }) {
-  const hero = getPostPicture(post.slug, post.cover || "cover");
+  const hero = getPostCover(post);
   const gallery = (post.gallery || [])
     .map((name) => getPostPicture(post.slug, name))
     .filter(Boolean);
@@ -846,33 +895,19 @@ function PostDetail({ post }) {
               style={{ borderColor: "#00000012" }}
             >
               <div className="relative aspect-[3/4] w-full">
-                <picture className="absolute inset-0">
-                  {(hero.sources
-                    ? Array.isArray(hero.sources)
-                      ? hero.sources
-                      : [hero.sources]
-                    : []
-                  ).map((s, idx) => (
-                    <source
-                      key={s?.srcset || s?.src || idx}
-                      srcSet={s?.srcset || s?.src}
-                      type={s?.type}
-                      sizes="100vw"
-                    />
-                  ))}
-                  <img
-                    src={hero.img.src}
+                <div className="absolute inset-0">
+                  <ResponsivePicture
+                    pic={hero}
                     alt={post.title}
                     className={`h-full w-full object-cover transition-[filter,opacity] duration-500 ${
                       heroLoaded ? "opacity-100" : "opacity-80 blur-[2px]"
                     }`}
                     loading="eager"
-                    decoding="async"
                     sizes="100vw"
                     onLoad={() => setHeroLoaded(true)}
                     onError={() => setHeroLoaded(true)}
                   />
-                </picture>
+                </div>
               </div>
             </figure>
           )}
@@ -893,6 +928,17 @@ function PostDetail({ post }) {
                         <li key={idx}>{it}</li>
                       ))}
                     </ul>
+                  )}
+                  {b.image && (
+                    <figure className="mt-4 overflow-hidden rounded-3xl border border-black/10 bg-white shadow-sm">
+                      <img
+                        src={b.image}
+                        alt={b.title || post.title}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </figure>
                   )}
                 </div>
               ))}

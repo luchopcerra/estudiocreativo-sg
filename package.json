@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/generate-sitemap.js",
+    "sync:posts:notion": "node scripts/sync-notion-posts.js",
+    "prebuild": "node scripts/sync-notion-posts.js --optional && node scripts/generate-sitemap.js",
     "build": "vite build",
     "postbuild": "node scripts/generate-static-routes.js",
     "preview": "vite preview",
